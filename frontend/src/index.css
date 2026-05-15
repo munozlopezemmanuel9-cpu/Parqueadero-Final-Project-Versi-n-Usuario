@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Poppins", "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  /* OKLCH Neon Palette - colores base */
+  --color-gpa-blue: oklch(0.7 0.2 250);
+  --color-gpa-purple: oklch(0.6 0.3 300);
+  --color-gpa-cyan: oklch(0.8 0.2 190);
+
+  /* Escala completa gpa-* (necesaria para clases como gpa-200, gpa-600) */
+  --color-gpa-50:  oklch(0.97 0.04 250);
+  --color-gpa-100: oklch(0.93 0.07 250);
+  --color-gpa-200: oklch(0.87 0.10 250);
+  --color-gpa-300: oklch(0.80 0.13 250);
+  --color-gpa-400: oklch(0.75 0.16 250);
+  --color-gpa-500: oklch(0.70 0.20 250);
+  --color-gpa-600: oklch(0.62 0.22 250);
+  --color-gpa-700: oklch(0.52 0.22 250);
+  --color-gpa-800: oklch(0.42 0.18 250);
+  --color-gpa-900: oklch(0.30 0.12 250);
+
+  --color-gpa-primary: var(--color-gpa-blue);
+  --color-gpa-secondary: var(--color-gpa-purple);
+
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.5s ease-out forwards;
+  --animate-spin: spin 1s linear infinite;
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.5; filter: blur(20px); transform: scale(1); }
+    50% { opacity: 0.8; filter: blur(40px); transform: scale(1.1); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+}
+
+/* Base Styles */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    background-color: #0a0a0c;
+  }
+
+  body {
+    background-color: #0a0a0c;
+    color: rgb(226 232 240); /* slate-200 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: var(--font-body);
+  }
+
+  ::selection {
+    background-color: oklch(0.7 0.2 250 / 0.3);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+}
+
+/* Custom Components */
+@layer components {
+  .glass-card {
+    background-color: rgb(255 255 255 / 0.05);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgb(255 255 255 / 0.10);
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  }
+
+  .glass-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: rgb(255 255 255 / 0.05);
+    border: 1px solid rgb(255 255 255 / 0.10);
+    border-radius: 0.75rem;
+    color: white;
+    transition: all 0.3s;
+  }
+
+  .glass-input::placeholder {
+    color: rgb(100 116 139); /* slate-500 */
+  }
+
+  .glass-input:focus {
+    outline: none;
+    ring: 2px solid oklch(0.7 0.2 250 / 0.5);
+    border-color: oklch(0.7 0.2 250 / 0.5);
+    box-shadow: 0 0 0 2px oklch(0.7 0.2 250 / 0.3);
+  }
+
+  .btn-premium {
+    position: relative;
+    overflow: hidden;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(to right, oklch(0.7 0.2 250), oklch(0.6 0.3 300));
+    color: white;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px oklch(0.7 0.2 250 / 0.2);
+    transition: all 0.3s;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-premium:hover {
+    box-shadow: 0 10px 15px -3px oklch(0.7 0.2 250 / 0.4);
+    transform: scale(1.02);
+  }
+
+  .btn-premium:active {
+    transform: scale(0.98);
+  }
+
+  .btn-premium:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .text-neon-blue {
+    color: oklch(0.7 0.2 250);
+    filter: drop-shadow(0 0 8px oklch(0.7 0.2 250 / 0.5));
+  }
+}
+
+/* Utilities */
+@layer utilities {
+  .mask-radial {
+    mask-image: radial-gradient(circle, black, transparent 80%);
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+}
