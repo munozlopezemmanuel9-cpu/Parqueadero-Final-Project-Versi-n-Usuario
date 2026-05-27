@@ -5,17 +5,23 @@
  * con todos los middlewares y rutas necesarias.
  *
  * @author Equipo de Desarrollo
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
 const morgan = require('morgan');
+const helmet = require('helmet');
 require('dotenv').config();
 
 // Importar configuración de base de datos
 const { verificarConexion } = require('./config/database');
+  generalLimiter,
+  loginLimiter,
+  registerLimiter,
+  sanitizeInput,
+  securityLogger,
+} = require('./config/security');
 
 // Importar enrutador principal
 const routes = require('./routes');
@@ -32,11 +38,18 @@ const PORT = process.env.PORT || 3000;
 // ============================================
 
 // Helmet: Agrega cabeceras de seguridad HTTP
-// Protege contra vulnerabilidades web comunes
 app.use(helmet());
 
+// Rate limiting general
+app.use(generalLimiter);
+
+// Security logger
+app.use(securityLogger);
+
+// Sanitización de inputs
+app.use(sanitizeInput);
+
 // CORS: Permite solicitudes desde el frontend
-// Configurar según el origen del frontend en producción
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials: true,

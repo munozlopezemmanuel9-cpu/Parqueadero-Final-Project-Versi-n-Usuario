@@ -3,6 +3,10 @@
  *
  * Configura el enrutamiento y provee los contextos
  * necesarios para toda la aplicación.
+ *
+ * SISTEMA DE ROLES:
+ * - Admin: Acceso total (Dashboard, Vehículos, Plazas, Historial, Usuarios)
+ * - Empleado: Acceso operativo (Dashboard, Vehículos, Plazas, Historial) SIN Usuarios
  */
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -17,6 +21,7 @@ import Vehiculos from './pages/Vehiculos';
 import Plazas from './pages/Plazas';
 import Historial from './pages/Historial';
 import Usuarios from './pages/Usuarios';
+import Landing from './pages/Landing';
 
 // Componentes
 import Layout from './components/Layout';
@@ -27,13 +32,17 @@ import Layout from './components/Layout';
  * Redirige al login si el usuario no está autenticado.
  * También verifica el rol si se requiere uno específico.
  *
+ * IMPORTANTE: El parámetro rolRequerido='admin' hace que la ruta
+ * sea EXCLUSIVA para administradores. Los empleados serán redirigidos.
+ *
  * @param {Object} props - Props de la ruta
  * @param {ReactNode} props.children - Componente a renderizar
- * @param {string} props.rolRequerido - Rol requerido (opcional)
+ * @param {string} props.rolRequerido - Rol requerido (opcional, 'admin' para rutas exclusivas)
  */
 function RutaProtegida({ children, rolRequerido }) {
-  const { isAuthenticated, isAdmin, cargando } = useAuth();
+  const { isAuthenticated, isAdmin, usuario, cargando } = useAuth();
 
+  // Loading state
   if (cargando) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -45,12 +54,16 @@ function RutaProtegida({ children, rolRequerido }) {
     );
   }
 
+  // Si no está autenticado, redirigir a login
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
+  // Si la ruta requiere admin y el usuario NO es admin, redirigir a vehiculos
+  // ESTO EVITA QUE LOS EMPLEADOS ACCEDAN AL DASHBOARD FINANCIERO O USUARIOS
   if (rolRequerido === 'admin' && !isAdmin) {
-    return <Navigate to="/dashboard" replace />;
+    console.warn(`Acceso denegado: El usuario ${usuario?.nombre} (${usuario?.rol}) intentó acceder a una ruta exclusiva de admin`);
+    return <Navigate to="/vehiculos" replace />;
   }
 
   return (
@@ -67,6 +80,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Rutas públicas */}
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Registro />} />
 
@@ -74,7 +88,7 @@ function AppRoutes() {
       <Route
         path="/dashboard"
         element={
-          <RutaProtegida>
+          <RutaProtegida rolRequerido="admin">
             <Dashboard />
           </RutaProtegida>
         }
@@ -113,8 +127,7 @@ function AppRoutes() {
       />
 
       {/* Redirección por defecto */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

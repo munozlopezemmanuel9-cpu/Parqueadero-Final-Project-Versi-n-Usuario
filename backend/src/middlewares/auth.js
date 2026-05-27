@@ -122,8 +122,16 @@ function generarToken(usuario) {
     );
 }
 
+/**
+ * Middleware para verificar si el usuario es personal del parqueadero (Admin o Empleado)
+ */
+function verificarStaff(req, res, next) {
+    return verificarRol('admin', 'empleado')(req, res, next);
+}
+
 module.exports = {
     verificarAuth,
     verificarRol,
+    verificarStaff,
     generarToken,
 };

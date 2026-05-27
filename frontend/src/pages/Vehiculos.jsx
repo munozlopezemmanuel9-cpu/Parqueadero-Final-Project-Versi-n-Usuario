@@ -406,6 +406,8 @@ function ModalSalida({ abierto, movimiento, onClose, onConfirmar }) {
 export default function Vehiculos() {
   const { usuario } = useAuth();
   const [vehiculos, setVehiculos] = useState([]);
+  const [vehiculosFiltrados, setVehiculosFiltrados] = useState([]);
+  const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(true);
   const [modalEntradaAbierto, setModalEntradaAbierto] = useState(false);
   const [modalSalida, setModalSalida] = useState({ abierto: false, movimiento: null });
@@ -414,13 +416,28 @@ export default function Vehiculos() {
     setCargando(true);
     try {
       const response = await movimientosAPI.obtenerEnParqueadero();
-      setVehiculos(response.data.data.movimientos);
+      const data = response.data.data.movimientos;
+      setVehiculos(data);
+      setVehiculosFiltrados(data);
     } catch (error) {
       toast.error('Error al cargar vehículos');
     } finally {
       setCargando(false);
     }
   };
+
+  // Filter vehicles by plate search
+  useEffect(() => {
+    if (!busqueda.trim()) {
+      setVehiculosFiltrados(vehiculos);
+    } else {
+      setVehiculosFiltrados(
+        vehiculos.filter(v =>
+          v.placa?.toLowerCase().includes(busqueda.toLowerCase())
+        )
+      );
+    }
+  }, [busqueda, vehiculos]);
 
   useEffect(() => {
     cargarVehiculos();
@@ -497,6 +514,8 @@ export default function Vehiculos() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-gpa-blue transition-colors" />
             <input
               type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value.toUpperCase())}
               placeholder="Buscar por placa..."
               className="glass-input pl-11 w-full sm:w-72"
             />
@@ -522,7 +541,7 @@ export default function Vehiculos() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {vehiculos.map((movimiento) => {
+                {vehiculosFiltrados.map((movimiento) => {
                   const fechaEntrada = new Date(movimiento.fecha_entrada);
                   const horas = ((new Date() - fechaEntrada) / (1000 * 60 * 60)).toFixed(1);
 

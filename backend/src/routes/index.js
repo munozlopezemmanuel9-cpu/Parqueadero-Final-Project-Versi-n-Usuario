@@ -14,9 +14,10 @@ const usuariosController = require('../controllers/usuariosController');
 const vehiculosController = require('../controllers/vehiculosController');
 const movimientosController = require('../controllers/movimientosController');
 const plazasController = require('../controllers/plazasController');
+const clienteController = require('../controllers/clienteController');
 
 // Importar middlewares de autenticación y validación
-const { verificarAuth, verificarRol } = require('../middlewares/auth');
+const { verificarAuth, verificarRol, verificarStaff } = require('../middlewares/auth');
 const {
     validarRegistro,
     validarLogin,
@@ -60,7 +61,7 @@ router.delete('/usuarios/:id', usuariosController.eliminarUsuario);
 // RUTAS DE VEHÍCULOS (Admin y Empleado)
 // ============================================
 
-router.use('/vehiculos', verificarAuth);
+router.use('/vehiculos', verificarAuth, verificarStaff);
 
 router.post('/vehiculos', validarRegistroVehiculo, vehiculosController.registrarVehiculo);
 router.get('/vehiculos/placa/:placa', vehiculosController.buscarPorPlaca);
@@ -71,7 +72,7 @@ router.put('/vehiculos/:id', vehiculosController.actualizarVehiculo);
 // RUTAS DE MOVIMIENTOS (Admin y Empleado)
 // ============================================
 
-router.use('/movimientos', verificarAuth);
+router.use('/movimientos', verificarAuth, verificarStaff);
 
 router.post('/movimientos/entrada', validarRegistroEntrada, movimientosController.registrarEntrada);
 router.post('/movimientos/salida/:id', validarRegistroSalida, movimientosController.registrarSalida);
@@ -84,7 +85,7 @@ router.get('/movimientos/calcular-costo/:id', movimientosController.calcularCost
 // RUTAS DE PLAZAS
 // ============================================
 
-router.use('/plazas', verificarAuth);
+router.use('/plazas', verificarAuth, verificarStaff);
 
 // Todas las rutas de plazas son de lectura para empleados
 router.get('/plazas', plazasController.listarPlazas);
@@ -95,6 +96,16 @@ router.get('/plazas/:id', plazasController.obtenerPlaza);
 router.post('/plazas', verificarRol('admin'), validarCrearPlaza, plazasController.crearPlaza);
 router.put('/plazas/:id', verificarRol('admin'), plazasController.actualizarPlaza);
 router.delete('/plazas/:id', verificarRol('admin'), plazasController.eliminarPlaza);
+
+// ============================================
+// RUTAS DEL CLIENTE (Solo Clientes)
+// ============================================
+
+router.use('/cliente', verificarAuth, verificarRol('cliente'));
+
+router.get('/cliente/mis-vehiculos', clienteController.obtenerMisVehiculos);
+router.get('/cliente/mi-historial', clienteController.obtenerMiHistorial);
+router.get('/cliente/estado-parqueadero', clienteController.verEstadoParqueadero);
 
 // ============================================
 // RUTA DE TEST (Health check)

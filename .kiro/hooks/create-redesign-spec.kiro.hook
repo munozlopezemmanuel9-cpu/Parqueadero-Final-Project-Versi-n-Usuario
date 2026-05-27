@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Create Redesign Spec",
+  "description": "Create spec file for landing page redesign and role-based access control",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Create a comprehensive spec file for the GPA Parqueadero project that includes:\n\n1. **Landing Page Redesign Requirements**:\n   - Modern web scrolling experience with immersive animations\n   - Hero section with impact visual and premium feel\n   - Sections: Hero, About, What We Do, Problems Solved, Benefits, Why Us, Stats, How It Works, Testimonials, Dashboard Preview, CTA, Footer\n   - Modern SaaS-style design with glassmorphism, gradients, and smooth transitions\n   - Responsive design for all devices\n   - Interactive background elements with mouse tracking\n\n2. **Role-Based Access Control Requirements**:\n   - Admin role: Full access to dashboard, statistics, financial data, user management\n   - Client role: Limited access - only their own reservations, history, profile, parking status\n   - Client should NOT see: daily income, gross revenue, financial statistics, user management\n   - Route protection for all admin-only endpoints\n   - Role validation in API controllers\n\n3. **Technical Requirements**:\n   - Keep Supabase for now (student project)\n   - Use framer-motion for animations\n   - Implement proper route guards in React Router\n   - Add role-based filtering in API responses\n   - Maintain existing backend structure but enhance security\n\nPlease create a detailed spec file that will guide the implementation of these features."
+  }
+}

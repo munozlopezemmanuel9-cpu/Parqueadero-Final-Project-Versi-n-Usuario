@@ -3,6 +3,10 @@
  *
  * Contiene el sidebar de navegación y el área de contenido principal.
  * Se usa en todas las páginas protegidas de la aplicación.
+ *
+ * IMPORTANTE: El sistema de roles diferencia claramente entre:
+ * - Admin: Acceso total al sistema (incluyendo gestión de usuarios)
+ * - Empleado: Acceso operativo (vehículos, plazas, historial) SIN gestión de usuarios
  */
 
 import { useState, useRef, useEffect } from 'react';
@@ -20,6 +24,8 @@ import {
   X,
   ChevronRight,
   MapPin,
+  Shield,
+  UserCheck,
 } from 'lucide-react';
 
 /**
@@ -34,44 +40,56 @@ function Sidebar({ abierto, onCerrar }) {
   const navigate = useNavigate();
   const { usuario, isAdmin, logout } = useAuth();
 
-  // Definición de items del menú
+  // Definición de items del menú con control de roles estricto
   const menuItems = [
     {
       titulo: 'Dashboard',
       icon: LayoutDashboard,
       ruta: '/dashboard',
-      roles: ['admin', 'empleado'],
+      roles: ['admin'], // SOLO ADMIN - Los empleados no ven ingresos ni gráficos
+      descripcion: 'Panel principal con estadísticas',
+      adminOnly: true,
     },
     {
       titulo: 'Vehículos en Parqueadero',
       icon: Car,
       ruta: '/vehiculos',
       roles: ['admin', 'empleado'],
+      descripcion: 'Gestión de entradas y salidas',
     },
     {
       titulo: 'Plazas',
       icon: ParkingSquare,
       ruta: '/plazas',
       roles: ['admin', 'empleado'],
+      descripcion: 'Estado de espacios',
     },
     {
       titulo: 'Historial',
       icon: History,
       ruta: '/historial',
       roles: ['admin', 'empleado'],
+      descripcion: 'Registro de movimientos',
     },
     {
       titulo: 'Usuarios',
       icon: Users,
       ruta: '/usuarios',
-      roles: ['admin'],  // Solo admin
+      roles: ['admin'],  // SOLO ADMIN - Los empleados NO pueden acceder
+      descripcion: 'Gestión de usuarios del sistema',
+      adminOnly: true,
     },
   ];
 
-  // Filtrar items según rol del usuario
-  const itemsVisibles = menuItems.filter(item =>
-    item.roles.includes(usuario?.rol)
-  );
+  // Filtrar items según rol del usuario de forma estricta
+  const itemsVisibles = menuItems.filter(item => {
+    // Si el item es solo para admin, verificar que el usuario sea admin
+    if (item.adminOnly) {
+      return usuario?.rol === 'admin';
+    }
+    // Para otros items, verificar que el rol esté en la lista permitida
+    return item.roles.includes(usuario?.rol);
+  });
 
   /**
    * Manejar cierre de sesión
@@ -151,11 +169,11 @@ function Sidebar({ abierto, onCerrar }) {
             })}
           </nav>
 
-          {/* Información del usuario */}
+          {/* Información del usuario con indicador de rol */}
           <div className="p-4 border-t border-white/10">
             <div className="flex items-center gap-3 px-4 py-3 rounded-xl glass-card bg-white/5 border-white/5">
-              <div className="w-10 h-10 bg-gpa-blue/20 border border-gpa-blue/30 rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold text-gpa-blue">
+              <div className={`w-10 h-10 ${isAdmin ? 'bg-purple-500/20 border-purple-500/30' : 'bg-gpa-blue/20 border-gpa-blue/30'} border rounded-full flex items-center justify-center`}>
+                <span className={`text-sm font-bold ${isAdmin ? 'text-purple-400' : 'text-gpa-blue'}`}>
                   {usuario?.nombre?.charAt(0)?.toUpperCase()}
                 </span>
               </div>
@@ -163,11 +181,31 @@ function Sidebar({ abierto, onCerrar }) {
                 <p className="text-sm font-bold text-white truncate">
                   {usuario?.nombre}
                 </p>
-                <p className="text-xs text-slate-400 capitalize font-medium">
-                  {usuario?.rol}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  {isAdmin ? (
+                    <>
+                      <Shield className="w-3 h-3 text-purple-400" />
+                      <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">Administrador</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="w-3 h-3 text-gpa-cyan" />
+                      <span className="text-xs text-gpa-cyan font-bold uppercase tracking-wider">Empleado</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* Indicador de permisos */}
+            {isAdmin && (
+              <div className="mt-3 px-4 py-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                <p className="text-[10px] text-purple-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <Shield className="w-3 h-3" />
+                  Acceso Total al Sistema
+                </p>
+              </div>
+            )}
 
             {/* Botón cerrar sesión */}
             <button
