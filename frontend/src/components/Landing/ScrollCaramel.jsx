@@ -144,7 +144,8 @@ const ParticleLayer = () => {
             width: p.size,
             height: p.size,
             background: p.color,
-            boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
+            boxShadow: `0 0 10px ${p.color}`,
+            willChange: "transform, opacity",
           }}
           animate={{
             y: ["-20%", "20%", "-20%"],
@@ -201,10 +202,10 @@ const ScrollCaramel = () => {
       <div className="sticky top-0 flex h-screen items-center overflow-hidden">
         
         {/* Ambient Caramel Glows */}
-        <motion.div style={{ x: bgX1 }} className="absolute inset-0 z-0 pointer-events-none w-[200vw]">
-          <div className="absolute top-[-20%] left-[10%] w-[800px] h-[800px] bg-amber-500/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-10%] left-[40%] w-[600px] h-[600px] bg-orange-600/10 rounded-full blur-[100px]" />
-          <div className="absolute top-[20%] left-[80%] w-[700px] h-[700px] bg-yellow-500/10 rounded-full blur-[150px]" />
+        <motion.div style={{ x: bgX1, willChange: 'transform' }} className="absolute inset-0 z-0 pointer-events-none w-[200vw]">
+          <div className="absolute top-[-20%] left-[10%] w-[800px] h-[800px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)', transform: 'translateZ(0)' }} />
+          <div className="absolute bottom-[-10%] left-[40%] w-[600px] h-[600px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #ea580c 0%, transparent 70%)', transform: 'translateZ(0)' }} />
+          <div className="absolute top-[20%] left-[80%] w-[700px] h-[700px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #eab308 0%, transparent 70%)', transform: 'translateZ(0)' }} />
         </motion.div>
 
         {/* Floating Particles */}

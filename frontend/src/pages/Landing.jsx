@@ -16,20 +16,17 @@ const Landing = () => {
     <div className="min-h-screen bg-[#07070a] text-white selection:bg-gpa-blue/30 overflow-x-clip">
       {/* Global ambient background glows */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <motion.div
-          animate={{ scale: [1, 1.08, 1], opacity: [0.08, 0.14, 0.08] }}
-          transition={{ duration: 12, repeat: Infinity }}
-          className="absolute top-[-15%] left-[-10%] w-[45%] h-[45%] rounded-full bg-gpa-blue/20 blur-[130px]"
+        <div
+          className="absolute top-[-15%] left-[-10%] w-[45%] h-[45%] rounded-full opacity-20"
+          style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)', transform: 'translateZ(0)' }}
         />
-        <motion.div
-          animate={{ scale: [1.05, 1, 1.05], opacity: [0.08, 0.13, 0.08] }}
-          transition={{ duration: 14, repeat: Infinity }}
-          className="absolute bottom-[-15%] right-[-10%] w-[45%] h-[45%] rounded-full bg-gpa-purple/20 blur-[130px]"
+        <div
+          className="absolute bottom-[-15%] right-[-10%] w-[45%] h-[45%] rounded-full opacity-20"
+          style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)', transform: 'translateZ(0)' }}
         />
-        <motion.div
-          animate={{ scale: [1, 1.15, 1], opacity: [0.04, 0.08, 0.04] }}
-          transition={{ duration: 18, repeat: Infinity }}
-          className="absolute top-[45%] left-[45%] w-[25%] h-[25%] rounded-full bg-gpa-cyan/15 blur-[100px]"
+        <div
+          className="absolute top-[45%] left-[45%] w-[25%] h-[25%] rounded-full opacity-15"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)', transform: 'translateZ(0)' }}
         />
       </div>
 
