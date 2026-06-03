@@ -61,20 +61,50 @@ export default function Registro() {
     if (errores[name]) setErrores(prev => ({ ...prev, [name]: '' }));
   };
 
+  // Reglas de validación de contraseña
+  const passwordRules = [
+    { test: (p) => p.length >= 8, label: 'Mínimo 8 caracteres' },
+    { test: (p) => p.length <= 12, label: 'Máximo 12 caracteres' },
+    { test: (p) => /[a-z]/.test(p), label: 'Al menos una minúscula' },
+    { test: (p) => /[A-Z]/.test(p), label: 'Al menos una mayúscula' },
+    { test: (p) => /\d/.test(p), label: 'Al menos un número' },
+    { test: (p) => /[^A-Za-z0-9]/.test(p), label: 'Al menos un carácter especial (!@#$...)' },
+  ];
+
+  const passwordPassed = passwordRules.filter(r => r.test(formData.password)).length;
+
   const validarFormulario = () => {
     const nuevosErrores = {};
-    if (!formData.nombre.trim()) nuevosErrores.nombre = 'El nombre es requerido';
+
+    // Nombre: solo letras y espacios, 3-100 chars
+    if (!formData.nombre.trim()) {
+      nuevosErrores.nombre = 'El nombre es requerido';
+    } else if (!/^[A-Za-zÁÉÍÓÚñáéíóúÑ\s]{3,100}$/.test(formData.nombre)) {
+      nuevosErrores.nombre = 'Solo letras y espacios (3-100 caracteres)';
+    }
+
+    // Email: debe ser @gmail.com
     if (!formData.email.trim()) {
       nuevosErrores.email = 'El email es requerido';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      nuevosErrores.email = 'Email inválido';
+    } else if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(formData.email)) {
+      nuevosErrores.email = 'El email debe ser un Gmail válido (@gmail.com)';
     }
-    if (formData.password.length < 6) {
-      nuevosErrores.password = 'Mínimo 6 caracteres';
+
+    // Password: todas las reglas deben pasar
+    if (!formData.password) {
+      nuevosErrores.password = 'La contraseña es requerida';
+    } else {
+      const fallos = passwordRules.filter(r => !r.test(formData.password)).map(r => r.label);
+      if (fallos.length > 0) {
+        nuevosErrores.password = 'Falta: ' + fallos.join(', ');
+      }
     }
+
+    // Confirmar contraseña
     if (formData.password !== formData.confirmPassword) {
       nuevosErrores.confirmPassword = 'Las contraseñas no coinciden';
     }
+
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
   };
@@ -83,13 +113,25 @@ export default function Registro() {
     e.preventDefault();
     if (!validarFormulario()) return;
     setCargando(true);
-    const exito = await registro({
-      nombre: formData.nombre,
-      email: formData.email,
-      password: formData.password,
-    });
-    setCargando(false);
-    if (exito) navigate('/dashboard');
+    try {
+      const exito = await registro({
+        nombre: formData.nombre,
+        email: formData.email,
+        password: formData.password,
+      });
+      setCargando(false);
+      if (exito) navigate('/dashboard');
+    } catch (error) {
+      setCargando(false);
+      // Mostrar errores del backend campo por campo
+      if (error.response?.data?.errores) {
+        const backendErrors = {};
+        error.response.data.errores.forEach(err => {
+          backendErrors[err.campo] = err.mensaje;
+        });
+        setErrores(prev => ({ ...prev, ...backendErrors }));
+      }
+    }
   };
 
   return (
@@ -313,26 +355,39 @@ export default function Registro() {
                 </div>
               </div>
 
-              {/* Password strength hint */}
+              {/* Password strength indicator — based on real rules */}
               {formData.password && (
-                <div className="flex gap-1.5 px-1">
-                  {[1, 2, 3, 4].map((level) => {
-                    const strength = formData.password.length >= level * 2 ? true : false;
-                    return (
+                <div className="space-y-2 px-1">
+                  {/* Strength bar */}
+                  <div className="flex gap-1.5">
+                    {passwordRules.map((rule, i) => (
                       <div
-                        key={level}
+                        key={i}
                         className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                          strength
-                            ? formData.password.length >= 8
+                          rule.test(formData.password)
+                            ? passwordPassed === passwordRules.length
                               ? 'bg-green-500'
-                              : formData.password.length >= 6
+                              : passwordPassed >= 4
                               ? 'bg-amber-500'
                               : 'bg-red-500'
                             : 'bg-white/10'
                         }`}
                       />
-                    );
-                  })}
+                    ))}
+                  </div>
+                  {/* Rule checklist */}
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                    {passwordRules.map((rule, i) => (
+                      <span
+                        key={i}
+                        className={`text-[10px] flex items-center gap-1 transition-colors ${
+                          rule.test(formData.password) ? 'text-green-400' : 'text-slate-500'
+                        }`}
+                      >
+                        {rule.test(formData.password) ? '✓' : '○'} {rule.label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 

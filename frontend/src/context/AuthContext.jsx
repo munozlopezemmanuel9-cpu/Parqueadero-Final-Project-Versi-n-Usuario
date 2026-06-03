@@ -121,8 +121,15 @@ export function AuthProvider({ children }) {
 
       return true;
     } catch (error) {
-      const mensaje = error.message || 'Error al registrar usuario';
-      toast.error(mensaje);
+      // Si hay errores de validación, mostrar cada uno
+      if (error.response?.data?.errores) {
+        error.response.data.errores.forEach(err => {
+          toast.error(`${err.campo}: ${err.mensaje}`);
+        });
+      } else {
+        const mensaje = error.response?.data?.message || error.message || 'Error al registrar usuario';
+        toast.error(mensaje);
+      }
       return false;
     }
   };

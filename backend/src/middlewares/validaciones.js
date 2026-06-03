@@ -35,26 +35,31 @@ function manejarErroresValidacion(req, res, next) {
 // ============================================
 
 const validarRegistro = [
-    body('nombre')
-        .trim()
-        .notEmpty().withMessage('El nombre es requerido')
-        .isLength({ min: 3, max: 100 }).withMessage('El nombre debe tener entre 3 y 100 caracteres'),
+  body('nombre')
+    .trim()
+    .notEmpty().withMessage('El nombre es requerido')
+    .matches(/^[A-Za-zÁÉÍÓÚñáéíóúÑ\s]{3,100}$/)
+    .withMessage('El nombre solo debe contener letras y espacios (3-100 caracteres)'),
 
-    body('email')
-        .trim()
-        .notEmpty().withMessage('El email es requerido')
-        .isEmail().withMessage('El email no es válido')
-        .normalizeEmail(),
+  body('email')
+    .trim()
+    .notEmpty().withMessage('El email es requerido')
+    .matches(/^[a-zA-Z0-9._%+-]+@gmail\.com$/)
+    .withMessage('El email debe ser un Gmail válido (@gmail.com)'),
 
-    body('password')
-        .notEmpty().withMessage('La contraseña es requerida')
-        .isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
+  body('password')
+    .notEmpty().withMessage('La contraseña es requerida')
+    .isLength({ min: 8, max: 12 }).withMessage('La contraseña debe tener entre 8 y 12 caracteres')
+    .matches(/[a-z]/).withMessage('La contraseña debe contener al menos una letra minúscula')
+    .matches(/[A-Z]/).withMessage('La contraseña debe contener al menos una letra mayúscula')
+    .matches(/\d/).withMessage('La contraseña debe contener al menos un número')
+    .matches(/[^A-Za-z0-9]/).withMessage('La contraseña debe contener al menos un carácter especial (!@#$%...)'),
 
-    body('rol')
-        .optional()
-        .isIn(['admin', 'empleado']).withMessage('El rol debe ser "admin" o "empleado"'),
+  body('rol')
+    .optional()
+    .isIn(['admin', 'empleado']).withMessage('El rol debe ser "admin" o "empleado"'),
 
-    manejarErroresValidacion,
+  manejarErroresValidacion,
 ];
 
 const validarLogin = [
@@ -138,55 +143,47 @@ const validarRegistroSalida = [
 // VALIDACIONES PARA USUARIOS
 // ============================================
 
-const validarCrearUsuario = [
+  const regexNombre = /^[A-Za-zÁÉÍÓÚñáéíóúÑ\s]{3,100}$/;
+  const regexEmail = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+  const regexPass = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._\-\/#])[A-Za-z\d@$!%*?&._\-\/#]{8,12}$/;
+
+  const validarCrearUsuario = [
     body('nombre')
-        .trim()
-        .notEmpty().withMessage('El nombre es requerido')
-        .isLength({ min: 3, max: 100 }).withMessage('El nombre debe tener entre 3 y 100 caracteres'),
-
+      .trim()
+      .matches(regexNombre)
+      .withMessage('El nombre debe tener entre 3 y 100 letras y espacios'),
     body('email')
-        .trim()
-        .notEmpty().withMessage('El email es requerido')
-        .isEmail().withMessage('El email no es válido')
-        .normalizeEmail(),
-
+      .trim()
+      .notEmpty().withMessage('El email es requerido')
+      .matches(regexEmail)
+      .withMessage('El email debe ser un Gmail válido'),
     body('password')
-        .notEmpty().withMessage('La contraseña es requerida')
-        .isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
-
+      .notEmpty().withMessage('La contraseña es requerida')
+      .isLength({ min: 8, max: 12 }).withMessage('La contraseña debe tener entre 8 y 12 caracteres')
+      .matches(/[a-z]/).withMessage('La contraseña debe contener al menos una minúscula')
+      .matches(/[A-Z]/).withMessage('La contraseña debe contener al menos una mayúscula')
+      .matches(/\d/).withMessage('La contraseña debe contener al menos un número')
+      .matches(/[^A-Za-z0-9]/).withMessage('La contraseña debe contener al menos un carácter especial'),
     body('rol')
-        .notEmpty().withMessage('El rol es requerido')
-        .isIn(['admin', 'empleado']).withMessage('El rol debe ser "admin" o "empleado"'),
-
+      .notEmpty().withMessage('El rol es requerido')
+      .isIn(['admin', 'empleado']).withMessage('El rol debe ser "admin" o "empleado"'),
     manejarErroresValidacion,
-];
+  ];
 
-const validarActualizarUsuario = [
-    param('id')
-        .notEmpty().withMessage('El ID del usuario es requerido')
-        .isInt({ min: 1 }).withMessage('El ID debe ser un número positivo'),
-
+  // Validación para que el propio usuario pueda actualizar su perfil (nombre y/o password)
+  const validarActualizarPerfil = [
     body('nombre')
-        .optional()
-        .trim()
-        .isLength({ min: 3, max: 100 }).withMessage('El nombre debe tener entre 3 y 100 caracteres'),
-
-    body('email')
-        .optional()
-        .trim()
-        .isEmail().withMessage('El email no es válido')
-        .normalizeEmail(),
-
-    body('rol')
-        .optional()
-        .isIn(['admin', 'empleado']).withMessage('El rol debe ser "admin" o "empleado"'),
-
-    body('activo')
-        .optional()
-        .isBoolean().withMessage('El estado activo debe ser true o false'),
-
+      .optional()
+      .trim()
+      .matches(regexNombre)
+      .withMessage('El nombre debe tener entre 3 y 100 letras y espacios'),
+    body('password')
+      .optional()
+      .matches(regexPass)
+      .withMessage('Contraseña 8‑12 chars, 1 may., 1 min., 1 núm., 1 símbolo'),
     manejarErroresValidacion,
-];
+  ];
+
 
 // ============================================
 // VALIDACIONES PARA PLAZAS
@@ -219,4 +216,5 @@ module.exports = {
     validarCrearUsuario,
     validarActualizarUsuario,
     validarCrearPlaza,
+    validarActualizarPerfil,
 };
