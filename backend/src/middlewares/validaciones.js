@@ -170,6 +170,33 @@ const validarRegistroSalida = [
     manejarErroresValidacion,
   ];
 
+  const validarActualizarUsuario = [
+    param('id')
+      .notEmpty().withMessage('El ID del usuario es requerido')
+      .isInt({ min: 1 }).withMessage('El ID debe ser un número positivo'),
+    body('nombre')
+      .optional()
+      .trim()
+      .matches(regexNombre)
+      .withMessage('El nombre debe tener entre 3 y 100 letras y espacios'),
+    body('email')
+      .optional()
+      .trim()
+      .matches(regexEmail)
+      .withMessage('El email debe ser un Gmail válido'),
+    body('password')
+      .optional()
+      .isLength({ min: 8, max: 12 }).withMessage('La contraseña debe tener entre 8 y 12 caracteres')
+      .matches(/[a-z]/).withMessage('La contraseña debe contener al menos una minúscula')
+      .matches(/[A-Z]/).withMessage('La contraseña debe contener al menos una mayúscula')
+      .matches(/\d/).withMessage('La contraseña debe contener al menos un número')
+      .matches(/[^A-Za-z0-9]/).withMessage('La contraseña debe contener al menos un carácter especial'),
+    body('rol')
+      .optional()
+      .isIn(['admin', 'empleado']).withMessage('El rol debe ser "admin" o "empleado"'),
+    manejarErroresValidacion,
+  ];
+
   // Validación para que el propio usuario pueda actualizar su perfil (nombre y/o password)
   const validarActualizarPerfil = [
     body('nombre')
