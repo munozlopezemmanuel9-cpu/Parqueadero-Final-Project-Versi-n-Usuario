@@ -127,7 +127,7 @@ const ParticleLayer = () => {
     x: Math.random() * 100,
     y: Math.random() * 100,
     size: Math.random() * 6 + 2,
-    color: Math.random() > 0.5 ? "#f59e0b" : "#fbbf24",
+    color: Math.random() > 0.5 ? "#22d3ee" : "#3b82f6",
     duration: Math.random() * 10 + 10,
     delay: Math.random() * 5,
   }));
@@ -190,10 +190,10 @@ const ScrollCaramel = () => {
   const bgX2 = useTransform(springProgress, [0, 1], ["0%", "-40%"]);
 
   const stats = [
-    { value: 500, suffix: "+", label: "Parqueaderos", icon: Car, accentColor: "#f59e0b", delay: 0.1 },
-    { value: 2000000, suffix: "M+", label: "Vehículos", icon: TrendingUp, accentColor: "#fbbf24", delay: 0.2 },
-    { value: 99, suffix: ".9%", label: "Uptime", icon: Zap, accentColor: "#d97706", delay: 0.3 },
-    { value: 28, suffix: "s", label: "Registro", icon: Clock, accentColor: "#f59e0b", delay: 0.4 },
+    { value: 500, suffix: "+", label: "Parqueaderos", icon: Car, accentColor: "#22d3ee", delay: 0.1 },
+    { value: 2000000, suffix: "M+", label: "Vehículos", icon: TrendingUp, accentColor: "#3b82f6", delay: 0.2 },
+    { value: 99, suffix: ".9%", label: "Uptime", icon: Zap, accentColor: "#8b5cf6", delay: 0.3 },
+    { value: 28, suffix: "s", label: "Registro", icon: Clock, accentColor: "#06b6d4", delay: 0.4 },
   ];
 
   return (
@@ -203,9 +203,9 @@ const ScrollCaramel = () => {
         
         {/* Ambient Caramel Glows */}
         <motion.div style={{ x: bgX1, willChange: 'transform' }} className="absolute inset-0 z-0 pointer-events-none w-[200vw]">
-          <div className="absolute top-[-20%] left-[10%] w-[800px] h-[800px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)', transform: 'translateZ(0)' }} />
-          <div className="absolute bottom-[-10%] left-[40%] w-[600px] h-[600px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #ea580c 0%, transparent 70%)', transform: 'translateZ(0)' }} />
-          <div className="absolute top-[20%] left-[80%] w-[700px] h-[700px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #eab308 0%, transparent 70%)', transform: 'translateZ(0)' }} />
+          <div className="absolute top-[-20%] left-[10%] w-[800px] h-[800px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)', transform: 'translateZ(0)' }} />
+          <div className="absolute bottom-[-10%] left-[40%] w-[600px] h-[600px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)', transform: 'translateZ(0)' }} />
+          <div className="absolute top-[20%] left-[80%] w-[700px] h-[700px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #22d3ee 0%, transparent 70%)', transform: 'translateZ(0)' }} />
         </motion.div>
 
         {/* Floating Particles */}
@@ -221,18 +221,18 @@ const ScrollCaramel = () => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full border border-amber-500/30 bg-amber-500/5 backdrop-blur-sm mb-8"
+                className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full border border-gpa-blue/30 bg-gpa-blue/5 backdrop-blur-sm mb-8"
               >
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <span className="text-amber-400 text-xs font-black uppercase tracking-[0.25em]">
+                <Star className="w-4 h-4 text-gpa-cyan fill-gpa-cyan" />
+                <span className="text-gpa-cyan text-xs font-black uppercase tracking-[0.25em]">
                   Métricas de Éxito
                 </span>
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                <Star className="w-4 h-4 text-gpa-cyan fill-gpa-cyan" />
               </motion.div>
 
               <h2 className="text-5xl md:text-7xl lg:text-[5rem] font-extrabold tracking-tight text-white leading-[1.05] mb-8">
                 La plataforma en la que{" "}
-                <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-600">
+                <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-gpa-cyan via-gpa-blue to-gpa-purple">
                   confían los mejores
                 </span>
               </h2>
@@ -241,7 +241,7 @@ const ScrollCaramel = () => {
                 Descubre por qué más de 500 parqueaderos han revolucionado su operación, multiplicando ingresos y eliminando filas.
               </p>
               
-              <div className="mt-12 flex items-center gap-4 text-amber-500/80">
+              <div className="mt-12 flex items-center gap-4 text-gpa-blue/80">
                  <span className="uppercase text-xs font-bold tracking-[0.3em]">Desliza para ver más</span>
                  <ArrowRight className="w-5 h-5 animate-bounce-x" />
               </div>
@@ -262,7 +262,7 @@ const ScrollCaramel = () => {
              {/* Features */}
              <div className="w-full md:w-5/12 space-y-8">
                 <h3 className="text-3xl md:text-5xl font-bold text-white mb-10">
-                   Control total en <span className="text-amber-500">tiempo real</span>
+                   Control total en <span className="text-gpa-cyan">tiempo real</span>
                 </h3>
                 {[
                   { title: "Cero papel, cero errores", desc: "Digitaliza el 100% de tus registros desde el primer día." },
@@ -277,8 +277,8 @@ const ScrollCaramel = () => {
                     transition={{ delay: i * 0.15, duration: 0.6 }}
                     className="flex gap-5 items-start"
                   >
-                    <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-                       <CheckCircle2 className="w-6 h-6 text-amber-500" />
+                    <div className="w-12 h-12 rounded-xl bg-gpa-blue/10 border border-gpa-blue/20 flex items-center justify-center flex-shrink-0">
+                       <CheckCircle2 className="w-6 h-6 text-gpa-cyan" />
                     </div>
                     <div>
                        <h4 className="text-xl font-bold text-white mb-2">{item.title}</h4>
@@ -296,21 +296,21 @@ const ScrollCaramel = () => {
                 transition={{ duration: 0.8 }}
                 className="w-full md:w-6/12 max-w-xl"
              >
-                <div className="relative rounded-[2.5rem] bg-[#0c0c10] border border-amber-500/20 p-10 md:p-14 shadow-2xl">
-                   <div className="absolute top-0 right-0 -mt-6 -mr-6 w-24 h-24 bg-amber-500/20 blur-2xl rounded-full pointer-events-none" />
-                   <div className="text-[100px] leading-none font-serif text-amber-500/40 absolute top-4 left-6">
+                <div className="relative rounded-[2.5rem] bg-[#0c0c10] border border-gpa-purple/20 p-10 md:p-14 shadow-2xl">
+                   <div className="absolute top-0 right-0 -mt-6 -mr-6 w-24 h-24 bg-gpa-purple/20 blur-2xl rounded-full pointer-events-none" />
+                   <div className="text-[100px] leading-none font-serif text-gpa-purple/40 absolute top-4 left-6">
                       "
                    </div>
                    <p className="relative z-10 text-xl md:text-2xl text-white font-medium leading-relaxed mb-8 mt-6">
-                      Desde que implementamos GPA, el tiempo de atención bajó de 3 minutos a <span className="text-amber-400 font-bold">28 segundos</span>. Los ingresos subieron 40%.
+                      Desde que implementamos GPA, el tiempo de atención bajó de 3 minutos a <span className="text-gpa-cyan font-bold">28 segundos</span>. Los ingresos subieron 40%.
                    </p>
                    <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white font-black text-lg">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gpa-cyan to-gpa-blue flex items-center justify-center text-white font-black text-lg">
                          CM
                       </div>
                       <div>
                          <p className="text-white font-bold text-lg">Carlos Morales</p>
-                         <p className="text-amber-500/80 text-sm">Director Operativo · ParkCenter</p>
+                         <p className="text-gpa-blue/80 text-sm">Director Operativo · ParkCenter</p>
                       </div>
                    </div>
                 </div>
@@ -319,7 +319,7 @@ const ScrollCaramel = () => {
 
           {/* SLIDE 4: Call to Action */}
           <div className="w-screen h-full flex flex-col items-center justify-center px-6 relative">
-            <motion.div
+             <motion.div
                initial={{ opacity: 0, y: 50 }}
                whileInView={{ opacity: 1, y: 0 }}
                viewport={{ once: true, margin: "0px 100px" }}
@@ -327,15 +327,15 @@ const ScrollCaramel = () => {
                className="text-center max-w-3xl"
             >
                <h2 className="text-5xl md:text-7xl font-extrabold text-white mb-8">
-                  Lleva tu parqueadero al <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">siguiente nivel</span>
+                  Lleva tu parqueadero al <span className="text-transparent bg-clip-text bg-gradient-to-r from-gpa-cyan to-gpa-blue">siguiente nivel</span>
                </h2>
                <p className="text-2xl text-slate-400 mb-12">
                   Únete a la red de parqueaderos más eficiente de Colombia. Empieza gratis hoy.
                </p>
                <a
                   href="/registro"
-                  className="group relative inline-flex items-center gap-4 px-10 py-5 rounded-2xl font-bold text-black text-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(245,158,11,0.4)]"
-                  style={{ background: "linear-gradient(135deg, #f59e0b, #fbbf24)" }}
+                  className="group relative inline-flex items-center gap-4 px-10 py-5 rounded-2xl font-bold text-black text-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(34,211,238,0.4)]"
+                  style={{ background: "linear-gradient(135deg, #22d3ee, #3b82f6)" }}
                >
                   <span className="relative z-10">Crear mi cuenta gratis</span>
                   <ArrowRight className="relative z-10 w-6 h-6 group-hover:translate-x-2 transition-transform" />

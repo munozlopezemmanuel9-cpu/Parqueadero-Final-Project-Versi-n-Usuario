@@ -25,6 +25,8 @@ import Landing from './pages/Landing';
 
 // Componentes
 import Layout from './components/Layout';
+import VoiceAssistant from './components/VoiceAssistant';
+import FaqDrawer from './components/FaqDrawer';
 
 /**
  * Ruta protegida
@@ -139,6 +141,8 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <VoiceAssistant />
+        <FaqDrawer />
         <AppRoutes />
         {/* Toast notifications */}
         <Toaster

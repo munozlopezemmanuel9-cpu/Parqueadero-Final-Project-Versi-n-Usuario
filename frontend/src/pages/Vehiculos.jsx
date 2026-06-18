@@ -14,9 +14,24 @@ import toast from 'react-hot-toast';
 /**
  * Modal para registrar entrada
  */
-function ModalEntrada({ abierto, onClose, onRegistrar }) {
+function ModalEntrada({ abierto, onClose, onRegistrar, datosIniciales }) {
   const [paso, setPaso] = useState(1);
   const [vehiculo, setVehiculo] = useState({ placa: '', tipo: 'carro', marca: '', modelo: '', color: '' });
+  
+  useEffect(() => {
+    if (abierto && datosIniciales) {
+        setVehiculo(prev => ({
+            ...prev,
+            placa: datosIniciales.placa,
+            tipo: datosIniciales.tipo || 'carro'
+        }));
+    } else if (!abierto) {
+        // Reset when closed manually
+        setPaso(1);
+        setVehiculo({ placa: '', tipo: 'carro', marca: '', modelo: '', color: '' });
+        setPlazaSeleccionada(null);
+    }
+  }, [abierto, datosIniciales]);
   const [plazaSeleccionada, setPlazaSeleccionada] = useState(null);
   const [plazasDisponibles, setPlazasDisponibles] = useState([]);
   const [cargando, setCargando] = useState(false);
@@ -85,10 +100,7 @@ function ModalEntrada({ abierto, onClose, onRegistrar }) {
         fecha_entrada: new Date().toISOString(),
       });
 
-      // Resetear formulario
-      setPaso(1);
-      setVehiculo({ placa: '', tipo: 'carro', marca: '', modelo: '', color: '' });
-      setPlazaSeleccionada(null);
+      // Resetear formulario (ahora se maneja en el useEffect o onClose)
       onClose();
     } catch (error) {
       console.error('Error:', error);
@@ -411,6 +423,22 @@ export default function Vehiculos() {
   const [cargando, setCargando] = useState(true);
   const [modalEntradaAbierto, setModalEntradaAbierto] = useState(false);
   const [modalSalida, setModalSalida] = useState({ abierto: false, movimiento: null });
+  const [datosInicialesVoz, setDatosInicialesVoz] = useState(null);
+
+  useEffect(() => {
+    const handleVoiceCommand = (e) => {
+      if (e.detail && e.detail.type === 'plate') {
+        setDatosInicialesVoz({
+          placa: e.detail.data,
+          tipo: e.detail.vehicleType
+        });
+        setModalEntradaAbierto(true);
+      }
+    };
+
+    window.addEventListener('voiceCommand', handleVoiceCommand);
+    return () => window.removeEventListener('voiceCommand', handleVoiceCommand);
+  }, []);
 
   const cargarVehiculos = async () => {
     setCargando(true);
@@ -581,8 +609,12 @@ export default function Vehiculos() {
       {/* Modales */}
       <ModalEntrada
         abierto={modalEntradaAbierto}
-        onClose={() => setModalEntradaAbierto(false)}
+        onClose={() => {
+            setModalEntradaAbierto(false);
+            setDatosInicialesVoz(null);
+        }}
         onRegistrar={handleRegistrarEntrada}
+        datosIniciales={datosInicialesVoz}
       />
 
       <ModalSalida
