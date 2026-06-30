@@ -69,7 +69,8 @@ export default function Registro() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const finalValue = name === 'nombre' ? value.replace(/^\s+/, '') : value;
+    setFormData(prev => ({ ...prev, [name]: finalValue }));
     if (errores[name]) setErrores(prev => ({ ...prev, [name]: '' }));
   };
 

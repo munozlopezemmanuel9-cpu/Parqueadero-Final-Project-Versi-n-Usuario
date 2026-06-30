@@ -138,7 +138,7 @@ export default function Reservar() {
         });
         return '¡Reserva confirmada con éxito!';
       },
-      error: 'Hubo un error al crear la reserva.'
+      error: (err) => `Hubo un error: ${err.message}`
     });
   };
 

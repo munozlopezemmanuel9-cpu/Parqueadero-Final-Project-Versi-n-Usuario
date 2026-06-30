@@ -1,26 +1,30 @@
-# GPA Parqueadero — Sistema de Gestión Inteligente
+# 🅿️ GPA Parqueadero — Sistema de Gestión Inteligente
 
-> Sistema SaaS completo para la gestión de parqueaderos en Medellín, Colombia.  
-> Frontend React 18 · Backend Node.js/Express · Base de datos Supabase (PostgreSQL) · Pagos Stripe.
+> **Proyecto Final** — Sistema SaaS completo para la gestión de parqueaderos en Medellín, Colombia.  
+> React 18 · Vite · Supabase (PostgreSQL) · Node.js/Express · Pagos Stripe · Deploy en Vercel.
+
+[![Deploy en Vercel](https://vercel.com/button)](https://vercel.com/new)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://reactjs.org)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase)](https://supabase.com)
 
 ---
 
 ## 🏗️ Arquitectura General
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    CLIENTE (Navegador)                   │
-│           React 18 + Vite + Tailwind CSS                 │
-└──────────────────────┬──────────────────────────────────┘
-                       │
-          ┌────────────┴────────────┐
-          │                         │
-          ▼                         ▼
+┌──────────────────────────────────────────────────────────┐
+│                  CLIENTE (Navegador)                      │
+│          React 18 + Vite + Vanilla CSS/Tailwind           │
+└─────────────────────┬────────────────────────────────────┘
+                      │
+         ┌────────────┴────────────┐
+         │                         │
+         ▼                         ▼
 ┌─────────────────┐      ┌─────────────────────┐
 │    SUPABASE      │      │  Backend Node.js     │
 │  (BD principal)  │      │  Express · Puerto 3000│
 │                  │      │                      │
-│ • Auth (JWT)     │      │ Solo para:           │
+│ • Auth local     │      │ Solo para:           │
 │ • Usuarios       │      │ • Pagos (Stripe)     │
 │ • Vehículos      │      │ • Suscripciones      │
 │ • Plazas         │      └──────────┬──────────┘
@@ -28,7 +32,7 @@
 │ • Parqueaderos   │                 ▼
 │ • Reservas       │      ┌─────────────────────┐
 │ • Calificaciones │      │       STRIPE          │
-└─────────────────┘      │  Pagos en línea       │
+└─────────────────┘      │   Pagos en línea       │
                           └─────────────────────┘
 ```
 
@@ -40,45 +44,42 @@
 gpa-parqueadero/
 ├── backend/                     # Servidor Node.js/Express
 │   ├── src/
-│   │   ├── config/             # Configuración de base de datos
-│   │   ├── controllers/        # Lógica de negocio
-│   │   │   ├── authController.js
-│   │   │   ├── pagosController.js       ← Stripe
-│   │   │   ├── suscripcionesController.js ← Suscripciones
-│   │   │   └── ...
-│   │   ├── middlewares/        # JWT y validaciones
-│   │   ├── models/             # Modelos de datos
-│   │   ├── routes/             # Rutas de la API
+│   │   ├── controllers/         # Lógica de negocio (Stripe, suscripciones)
+│   │   ├── middlewares/         # JWT y validaciones
+│   │   ├── routes/              # Rutas de la API REST
 │   │   └── server.js
 │   ├── database/
-│   │   ├── schema.sql           # Esquema MySQL (legacy/referencia)
-│   │   └── supabase_reservas.sql ← Script para crear tabla en Supabase
+│   │   ├── supabase_schema.sql  # Esquema completo de Supabase
+│   │   ├── supabase_reservas.sql ← Tabla reservas + RPC
+│   │   ├── insertar_plazas.sql
+│   │   └── insertar_movimientos_prueba.sql
 │   └── .env.example
 │
-└── frontend/                    # Aplicación React
+└── frontend/                    # Aplicación React 18
     ├── src/
-    │   ├── components/         # Componentes reutilizables
+    │   ├── components/          # Componentes reutilizables
     │   │   ├── ModalReserva.jsx    # Comprobante con QR
     │   │   ├── SistemaCalificacion.jsx
     │   │   ├── VoiceAssistant.jsx
     │   │   ├── TarjetaParqueadero.jsx
+    │   │   ├── Skeleton.jsx
     │   │   └── StripeCheckout.jsx
     │   ├── context/
-    │   │   └── AuthContext.jsx  # Auth con Supabase
-    │   ├── pages/              # Páginas de la aplicación
-    │   │   ├── Dashboard.jsx   # Panel admin
+    │   │   └── AuthContext.jsx  # Gestión de sesión con localStorage
+    │   ├── pages/               # Vistas de la aplicación
+    │   │   ├── Dashboard.jsx    # Panel admin con estadísticas
     │   │   ├── MapaParqueaderos.jsx
-    │   │   ├── Reservar.jsx    # Flujo de reserva (3 pasos)
-    │   │   ├── MisReservas.jsx # Gestión de reservas del cliente
-    │   │   ├── Suscripciones.jsx
-    │   │   ├── Vehiculos.jsx
+    │   │   ├── Reservar.jsx     # Flujo en 3 pasos
+    │   │   ├── MisReservas.jsx  # Panel de cliente
+    │   │   ├── Vehiculos.jsx    # Gestión operativa
     │   │   ├── Plazas.jsx
     │   │   ├── Historial.jsx
     │   │   └── ...
     │   ├── services/
-    │   │   └── api.js          # Todos los servicios de Supabase + backend
+    │   │   └── api.js           # Capa de acceso a Supabase
     │   └── config/
-    │       └── supabase.js     # Cliente Supabase
+    │       └── supabase.js      # Cliente Supabase
+    ├── .env                     # Variables de entorno (no subido al repo)
     └── package.json
 ```
 
@@ -86,39 +87,40 @@ gpa-parqueadero/
 
 ## 🎯 Características Implementadas
 
-### Sistema de Autenticación
-- ✅ Registro y login con Supabase Auth
-- ✅ JWT para gestión de sesiones
-- ✅ Roles: **Admin**, **Empleado** y **Cliente**
-- ✅ Control de acceso por rol (rutas protegidas)
-- ✅ Persistencia de sesión con localStorage
+### 🔐 Sistema de Autenticación
+- ✅ Registro con validación de contraseñas en tiempo real
+- ✅ Login local contra tabla `usuarios` (sin dependencia de Supabase Auth)
+- ✅ Tres roles diferenciados: **Admin**, **Empleado** y **Cliente**
+- ✅ Rutas protegidas según rol
+- ✅ Persistencia de sesión con `localStorage`
 
-### Portal del Cliente
-- ✅ Mapa interactivo de parqueaderos en Medellín
-- ✅ Búsqueda por distancia (geolocalización)
-- ✅ Flujo de reserva en 3 pasos (fecha → vehículo → pago)
-- ✅ Código QR único por reserva
-- ✅ Panel "Mis Reservas" con acciones (Llegué / Cancelar)
-- ✅ Historial y calificación de sedes
+### 👤 Portal del Cliente
+- ✅ Mapa interactivo de parqueaderos en Medellín (Leaflet)
+- ✅ Búsqueda por distancia y geolocalización GPS
+- ✅ Flujo de reserva en **3 pasos** (parqueadero → vehículo → pago)
+- ✅ Código QR único por reserva (comprobante descargable)
+- ✅ Panel **"Mis Reservas"** con acciones en tiempo real (Llegué / Cancelar / Navegar)
+- ✅ Historial de reservas pasadas con calificación de sedes
 - ✅ Suscripciones mensuales a parqueaderos
 - ✅ Asistente de voz integrado
 
-### Panel de Administración (Admin/Empleado)
+### 🛡️ Panel de Administración (Admin/Empleado)
 - ✅ Dashboard con estadísticas en tiempo real
-- ✅ Gráficos de ocupación por tipo de vehículo
-- ✅ Gestión de Plazas (CRUD completo)
-- ✅ Gestión de Vehículos (registro, búsqueda por placa)
-- ✅ Registro de Entrada y Salida de vehículos
-- ✅ Historial completo con filtros (placa, estado, fecha)
+- ✅ Gráficos de ocupación por tipo de vehículo (Recharts)
+- ✅ Gestión de Plazas: CRUD completo
+- ✅ **Registro de Entrada y Salida** de vehículos con timer
+- ✅ Visualización de vehículos estacionados con búsqueda por placa
+- ✅ Reservas pendientes del día (clientes que llegarán)
+- ✅ Historial con filtros (placa, estado, fecha)
 - ✅ Gestión de Usuarios (solo Admin)
 
-### UI/UX
+### ✨ UI/UX
 - ✅ Diseño dark mode premium estilo SaaS
-- ✅ Responsive (móvil y escritorio)
-- ✅ Animaciones y transiciones suaves
-- ✅ Notificaciones toast
+- ✅ Totalmente responsivo (móvil, tablet y escritorio)
+- ✅ Animaciones y transiciones suaves con CSS nativo
+- ✅ Notificaciones toast (react-hot-toast)
 - ✅ Skeletons de carga
-- ✅ Modales con backdrop blur
+- ✅ Modales con glassmorphism y backdrop-blur
 - ✅ Confetti al confirmar reserva
 
 ---
@@ -129,124 +131,114 @@ gpa-parqueadero/
 | Tecnología | Uso |
 |---|---|
 | React 18 | Framework UI |
-| Vite | Build tool + dev server |
-| Tailwind CSS | Estilos |
-| React Router DOM | Navegación |
-| Supabase JS | Base de datos y auth |
+| Vite 6 | Build tool + dev server |
+| React Router DOM | Navegación SPA |
+| Supabase JS | Base de datos directa + Auth |
 | Recharts | Gráficos del dashboard |
 | Lucide React | Íconos |
 | React Hot Toast | Notificaciones |
 | React QR Code | Código QR de reservas |
+| Leaflet + React-Leaflet | Mapa interactivo |
 | Canvas Confetti | Animación de confirmación |
 | date-fns | Manejo de fechas |
 
 ### Backend
 | Tecnología | Uso |
 |---|---|
-| Node.js + Express | Servidor API |
-| Stripe | Procesamiento de pagos |
-| JWT | Autenticación |
+| Node.js + Express | Servidor API REST |
+| Stripe | Procesamiento de pagos en línea |
+| JWT | Autenticación de tokens |
 | Bcryptjs | Hash de contraseñas |
-| MySQL2 | BD local (legacy) |
 | Helmet | Seguridad HTTP |
-| Morgan | Logging |
+| Morgan | Logging de peticiones |
 
 ### Infraestructura
 | Servicio | Uso |
 |---|---|
-| Supabase | Base de datos PostgreSQL + Auth en la nube |
-| Stripe | Pagos online |
+| Supabase | Base de datos PostgreSQL en la nube |
+| Vercel | Hosting del frontend |
 
 ---
 
-## 🗃️ Modelo de Datos (Supabase)
+## 🗃️ Modelo de Datos
 
 ```
 usuarios            parqueaderos
 ──────────          ────────────────
-id                  id
-nombre              nombre
-email               direccion
-password_hash       barrio / ciudad
-rol                 lat / lng
-activo              capacidad_total
-creado_en           espacios_disponibles
-                    tarifa_hora / tarifa_dia
-                    horario_apertura / cierre
-                    abierto_24h
+id (PK)             id (PK)
+nombre              nombre / direccion
+email               barrio / ciudad
+password_hash       lat / lng
+rol                 capacidad_total / espacios_disponibles
+activo              tarifa_hora / tarifa_dia
+creado_en           horario_apertura / cierre
                     tiene_camaras / techado
-                    rating_promedio
-                    activo
+                    rating_promedio / activo
 
 plazas              vehiculos
 ──────              ─────────
-id                  id
-nombre              placa
-tipo                tipo / marca / modelo
-estado              color
-tarifa_por_hora     propietario_id → usuarios
-                    creado_en
+id (PK)             id (PK)
+nombre              placa (UNIQUE)
+tipo                tipo / marca / modelo / color
+estado              propietario_id → usuarios
+tarifa_por_hora     creado_en
 
 movimientos         reservas
 ───────────         ────────
-id                  id
-vehiculo_id         usuario_id → usuarios
-plaza_id            parqueadero_id → parqueaderos
-fecha_entrada       vehiculo_placa / tipo
-fecha_salida        fecha_inicio / fin
-estado              horas_estimadas
-total_pagar         total / metodo_pago
+id (PK)             id (PK)
+vehiculo_id → (FK)  usuario_id → usuarios
+plaza_id → (FK)     parqueadero_id → parqueaderos
+fecha_entrada       vehiculo_placa / vehiculo_tipo
+fecha_salida        fecha_inicio / fecha_fin
+estado              horas_estimadas / total
+total_pagar         metodo_pago / pago_confirmado
 metodo_pago         estado (confirmada|activa|completada|cancelada)
-                    codigo_reserva (QR)
-                    pago_confirmado
+                    codigo_reserva UNIQUE (para QR)
 
 calificaciones      suscripciones
 ──────────────      ─────────────
-id                  id
-usuario_id          usuario_id → usuarios
-parqueadero_id      parqueadero_id → parqueaderos
-puntuacion_general  fecha_inicio / fin
+id (PK)             id (PK)
+usuario_id → (FK)   usuario_id → usuarios
+parqueadero_id(FK)  parqueadero_id → parqueaderos
+puntuacion_general  fecha_inicio / fecha_fin
 comentario          precio_mensual
 creado_en           estado / stripe_subscription_id
 ```
 
 ---
 
-## 🚀 Instalación y Ejecución
+## 🚀 Instalación y Ejecución Local
 
 ### Requisitos
 - Node.js 18+
-- Cuenta Supabase (ya configurada)
-- (Opcional) Cuenta Stripe para pagos reales
+- Cuenta Supabase activa
 
-### 1. Configurar Supabase
-
-La base de datos principal ya está en Supabase. Si necesitas crear la tabla de reservas:
-
+### 1. Clonar el repositorio
 ```bash
-# En Supabase Dashboard → SQL Editor
-# Ejecuta el script:
-backend/database/supabase_reservas.sql
+git clone https://github.com/munozlopezemmanuel9-cpu/Parqueadero-Final-Project-Versi-n-Usuario.git
+cd Parqueadero-Final-Project-Versi-n-Usuario
 ```
 
-### 2. Instalar y ejecutar el Frontend
-
+### 2. Configurar variables de entorno del Frontend
 ```bash
 cd frontend
+# Crear el archivo .env con:
+VITE_SUPABASE_URL=https://ueigbdtzcfgzrqcazkby.supabase.co
+VITE_SUPABASE_KEY=sb_publishable_kiXBFneNtp595bfEWf16Zg_a4DBODuH
+```
+
+### 3. Instalar dependencias y ejecutar
+```bash
 npm install
 npm run dev
 # → http://localhost:5173
 ```
 
-### 3. (Opcional) Instalar y ejecutar el Backend
-
-El backend solo es necesario para pagos con Stripe real.
-
+### 4. (Opcional) Backend para Stripe
 ```bash
-cd backend
+cd ../backend
 npm install
-# Crea el .env desde el ejemplo:
-copy .env.example .env
+cp .env.example .env
 # Edita .env con tu STRIPE_SECRET_KEY
 npm run dev
 # → http://localhost:3000
@@ -258,17 +250,31 @@ npm run dev
 
 | Rol | Email | Contraseña |
 |---|---|---|
-| Admin | admin@gpa.com | admin123 |
-| Empleado | empleado@gpa.com | empleado123 |
-| Cliente | (registrarse en /registro) | — |
-
-> Los usuarios se crean en Supabase Auth. Si las credenciales no funcionan, registra un nuevo usuario desde la pantalla de Login.
+| **Administrador** | `admin@gpa.com` | `admin123` |
+| **Administrador** | `munozlopezemmanuel9@gmail.com` | `Fornite123.` |
+| **Administrador** | `gloria.admin@gpa.com` | `gloria123` |
+| **Empleado** | `empleado@gpa.com` | `empleado123` |
+| **Empleado** | `carlos.empleado@gpa.com` | `carlos123` |
+| **Cliente** | `cliente@gpa.com` | `cliente123` |
+| **Cliente** | `emma123@gmail.com` | `Fornite123.` |
 
 ---
 
-## 📡 API del Backend (Stripe / Suscripciones)
+## ☁️ Deploy en Vercel
 
-El backend Node.js solo expone los endpoints relacionados con pagos:
+1. Conecta el repositorio de GitHub en [vercel.com](https://vercel.com/new)
+2. En **Settings → Environment Variables** configura:
+   ```
+   VITE_SUPABASE_URL = https://ueigbdtzcfgzrqcazkby.supabase.co
+   VITE_SUPABASE_KEY = sb_publishable_kiXBFneNtp595bfEWf16Zg_a4DBODuH
+   ```
+3. En **Root Directory** selecciona `frontend`
+4. Framework Preset: **Vite**
+5. ¡Despliega! 🚀
+
+---
+
+## 📡 API del Backend (Endpoints Stripe)
 
 | Método | Endpoint | Descripción |
 |---|---|---|
@@ -278,59 +284,19 @@ El backend Node.js solo expone los endpoints relacionados con pagos:
 
 ---
 
-## 🔧 Variables de Entorno
-
-### Frontend (`frontend/.env`)
-```env
-VITE_API_URL=http://localhost:3000/api
-```
-
-### Backend (`backend/.env`)
-```env
-PORT=3000
-NODE_ENV=development
-
-# Supabase (opcional, para validar tokens JWT desde el backend)
-SUPABASE_URL=https://jrkoqmvhcfrqtuibstjl.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<tu service role key>
-
-# Stripe
-STRIPE_SECRET_KEY=sk_test_<tu_clave>
-
-# JWT (solo si usas auth del backend)
-JWT_SECRET=tu_secreto_muy_seguro
-JWT_EXPIRES_IN=24h
-
-FRONTEND_URL=http://localhost:5173
-```
-
----
-
-## 📝 Notas Técnicas
-
-1. **Supabase es la BD principal**: Todo el CRUD de negocio (reservas, vehículos, plazas, movimientos) usa Supabase directamente desde el frontend mediante Row Level Security (RLS).
-
-2. **El backend Node.js** existe para integrar con Stripe (que requiere la clave secreta, la cual nunca debe exponerse en el frontend).
-
-3. **RLS en Supabase**: Cada usuario solo puede ver y modificar sus propios datos. Los admins tienen acceso total.
-
-4. **`schema.sql`** en `backend/database/` es el esquema legacy de MySQL y sirve como referencia técnica. No se usa en producción.
-
----
-
 ## 👨‍💻 Comandos de Desarrollo
 
 ```bash
 # Frontend
 npm run dev       # Servidor de desarrollo con HMR
-npm run build     # Build de producción
-npm run preview   # Preview del build
+npm run build     # Build de producción optimizado
+npm run preview   # Preview del build antes de desplegar
 
 # Backend
 npm run dev       # Desarrollo con auto-reload (nodemon)
-npm start         # Producción
+npm start         # Modo producción
 ```
 
 ---
 
-**Desarrollado con ❤️ para GPA Parqueadero · Medellín, Colombia**
+**Desarrollado con ❤️ por Emanuel Muñoz López para GPA Parqueadero · Medellín, Colombia**

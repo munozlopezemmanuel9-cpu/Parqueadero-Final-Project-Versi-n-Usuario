@@ -60,47 +60,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5. Políticas de Row Level Security (RLS)
+-- 5. Row Level Security (RLS) - DESHABILITADO
 -- =====================================================
-ALTER TABLE public.reservas ENABLE ROW LEVEL SECURITY;
+-- RLS ha sido deshabilitado completamente para permitir acceso
+-- sin restricciones de seguridad a nivel de fila.
+-- Ejecutar disable_rls_complete.sql para configurar permisos.
 
--- Los usuarios ven solo sus propias reservas
-CREATE POLICY "usuarios_ven_sus_reservas"
-    ON public.reservas FOR SELECT
-    USING (
-        usuario_id IN (
-            SELECT id FROM public.usuarios WHERE email = auth.jwt() ->> 'email'
-        )
-    );
-
--- Los usuarios pueden insertar sus propias reservas
-CREATE POLICY "usuarios_insertan_sus_reservas"
-    ON public.reservas FOR INSERT
-    WITH CHECK (
-        usuario_id IN (
-            SELECT id FROM public.usuarios WHERE email = auth.jwt() ->> 'email'
-        )
-    );
-
--- Los usuarios pueden actualizar el estado de sus propias reservas
-CREATE POLICY "usuarios_actualizan_sus_reservas"
-    ON public.reservas FOR UPDATE
-    USING (
-        usuario_id IN (
-            SELECT id FROM public.usuarios WHERE email = auth.jwt() ->> 'email'
-        )
-    );
-
--- Los admins pueden ver y modificar todas las reservas
-CREATE POLICY "admins_acceso_total_reservas"
-    ON public.reservas FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.usuarios
-            WHERE email = auth.jwt() ->> 'email'
-            AND rol = 'admin'
-        )
-    );
+ALTER TABLE public.reservas DISABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- FIN DEL SCRIPT

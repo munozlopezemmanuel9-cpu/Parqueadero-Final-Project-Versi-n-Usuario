@@ -6,6 +6,12 @@
 -- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================
+-- CONFIGURACIÓN DE RLS - DESHABILITADO
+-- ============================================
+-- Row Level Security está deshabilitado en todas las tablas
+-- Ejecutar disable_rls_complete.sql para configurar permisos completos
+
+-- ============================================
 -- TABLA DE USUARIOS (Pública - Perfiles)
 -- ============================================
 -- Esta tabla se sincroniza o complementa auth.users de Supabase
@@ -19,6 +25,9 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     creado_en TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     actualizado_en TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Deshabilitar RLS en usuarios
+ALTER TABLE IF EXISTS public.usuarios DISABLE ROW LEVEL SECURITY;
 
 -- Índices para búsquedas rápidas
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON public.usuarios(email);
@@ -40,6 +49,9 @@ CREATE TABLE IF NOT EXISTS public.plazas (
 CREATE INDEX IF NOT EXISTS idx_plazas_estado ON public.plazas(estado);
 CREATE INDEX IF NOT EXISTS idx_plazas_tipo ON public.plazas(tipo);
 
+-- Deshabilitar RLS en plazas
+ALTER TABLE IF EXISTS public.plazas DISABLE ROW LEVEL SECURITY;
+
 -- ============================================
 -- TABLA DE VEHICULOS
 -- ============================================
@@ -57,6 +69,9 @@ CREATE TABLE IF NOT EXISTS public.vehiculos (
 
 CREATE INDEX IF NOT EXISTS idx_vehiculos_placa ON public.vehiculos(placa);
 CREATE INDEX IF NOT EXISTS idx_vehiculos_propietario ON public.vehiculos(propietario_id);
+
+-- Deshabilitar RLS en vehiculos
+ALTER TABLE IF EXISTS public.vehiculos DISABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- TABLA DE MOVIMIENTOS (INGRESOS/SALIDAS)
@@ -81,6 +96,9 @@ CREATE TABLE IF NOT EXISTS public.movimientos (
 CREATE INDEX IF NOT EXISTS idx_movimientos_estado ON public.movimientos(estado);
 CREATE INDEX IF NOT EXISTS idx_movimientos_fecha_entrada ON public.movimientos(fecha_entrada);
 CREATE INDEX IF NOT EXISTS idx_movimientos_fecha_salida ON public.movimientos(fecha_salida);
+
+-- Deshabilitar RLS en movimientos
+ALTER TABLE IF EXISTS public.movimientos DISABLE ROW LEVEL SECURITY;
 
 
 -- ============================================

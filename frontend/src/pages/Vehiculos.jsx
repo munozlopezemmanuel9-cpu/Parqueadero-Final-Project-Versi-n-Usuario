@@ -463,7 +463,7 @@ export default function Vehiculos() {
   const cargarReservas = async () => {
     setCargando(true);
     try {
-      const response = await reservasAPI.obtenerMisReservas();
+      const response = await reservasAPI.obtenerTodas();
       // Filtrar solo las confirmadas/activas para que el empleado las vea
       const todas = response.data?.data?.reservas || response.data?.data || [];
       setReservasPendientes(todas.filter(r => r.estado === 'confirmada' || r.estado === 'activa'));

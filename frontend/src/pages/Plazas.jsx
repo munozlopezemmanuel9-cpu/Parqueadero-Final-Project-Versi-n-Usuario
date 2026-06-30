@@ -128,7 +128,7 @@ function ModalPlaza({ abierto, plaza, onClose, onGuardar }) {
   if (!abierto) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative glass-card bg-[#0a0a0c]/80 border-white/10 w-full max-w-md overflow-hidden animate-fade-in shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
