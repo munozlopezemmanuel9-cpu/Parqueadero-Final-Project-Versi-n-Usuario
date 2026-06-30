@@ -15,6 +15,9 @@ const vehiculosController = require('../controllers/vehiculosController');
 const movimientosController = require('../controllers/movimientosController');
 const plazasController = require('../controllers/plazasController');
 const clienteController = require('../controllers/clienteController');
+const pagosController = require('../controllers/pagosController');
+const suscripcionesController = require('../controllers/suscripcionesController');
+const reservasController = require('../controllers/reservasController');
 
 // Importar middlewares de autenticación y validación
 const { verificarAuth, verificarRol, verificarStaff } = require('../middlewares/auth');
@@ -106,6 +109,21 @@ router.use('/cliente', verificarAuth, verificarRol('cliente'));
 router.get('/cliente/mis-vehiculos', clienteController.obtenerMisVehiculos);
 router.get('/cliente/mi-historial', clienteController.obtenerMiHistorial);
 router.get('/cliente/estado-parqueadero', clienteController.verEstadoParqueadero);
+
+// ============================================
+// RUTAS DE PAGOS Y SUSCRIPCIONES (Clientes)
+// ============================================
+
+router.post('/pagos/create-payment-intent', verificarAuth, verificarRol('cliente'), pagosController.crearPaymentIntent);
+
+router.get('/suscripciones/mis-suscripciones', verificarAuth, verificarRol('cliente'), suscripcionesController.obtenerMisSuscripciones);
+router.post('/suscripciones/adquirir', verificarAuth, verificarRol('cliente'), suscripcionesController.adquirirSuscripcion);
+
+// ============================================
+// RUTAS DE RESERVAS (Clientes)
+// ============================================
+router.post('/reservas', verificarAuth, verificarRol('cliente'), reservasController.crearReserva);
+router.get('/reservas/mis-reservas', verificarAuth, verificarRol('cliente'), reservasController.obtenerMisReservas);
 
 // ============================================
 // RUTA DE TEST (Health check)

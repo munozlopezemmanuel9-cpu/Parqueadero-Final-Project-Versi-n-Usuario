@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Hero from '../components/Landing/Hero';
+import ComoFunciona from '../components/Landing/ComoFunciona';
 import ScrollCaramel from '../components/Landing/ScrollCaramel';
 import Features from '../components/Landing/Features';
 import Stats from '../components/Landing/Stats';
@@ -34,6 +35,9 @@ const Landing = () => {
       <main className="relative z-10">
         {/* 1. Hero principal impactante */}
         <Hero />
+
+        {/* ¿Cómo funciona? — 3 pasos visuales */}
+        <ComoFunciona />
 
         {/* Caramel scroll transition — estadísticas animadas inmersivas */}
         <ScrollCaramel />

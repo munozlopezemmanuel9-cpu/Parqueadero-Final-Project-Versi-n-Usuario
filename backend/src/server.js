@@ -16,6 +16,7 @@ require('dotenv').config();
 
 // Importar configuración de base de datos
 const { verificarConexion } = require('./config/database');
+const {
   generalLimiter,
   loginLimiter,
   registerLimiter,

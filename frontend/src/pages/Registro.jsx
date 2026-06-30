@@ -5,7 +5,7 @@
  * consistente con el resto del sistema GPA.
  */
 
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -15,16 +15,30 @@ import {
 } from 'lucide-react';
 
 const beneficios = [
-  'Dashboard en tiempo real',
-  'Cálculo automático de tarifas',
-  'Gestión de roles y permisos',
-  'Historial completo de movimientos',
-  'Exportación de reportes CSV',
+  'Reserva tu cupo en menos de 2 minutos',
+  'Código QR de acceso a la entrada',
+  'Cancela gratis antes de tu llegada',
+  'Guarda tus vehículos para reservar más rápido',
+  'Historial y calificaciones de tus parqueaderos',
 ];
 
 export default function Registro() {
+  const { registro, isAuthenticated, usuario } = useAuth();
+
   const navigate = useNavigate();
-  const { registro, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && usuario) {
+      if (usuario.rol === 'cliente') {
+        navigate('/mapa', { replace: true });
+      } else if (usuario.rol === 'empleado') {
+        navigate('/vehiculos', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, usuario, navigate]);
+
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -50,10 +64,8 @@ export default function Registro() {
     });
   };
 
-  if (isAuthenticated) {
-    navigate('/dashboard');
-    return null;
-  }
+  // Redirect handled by useEffect above
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -120,7 +132,9 @@ export default function Registro() {
         password: formData.password,
       });
       setCargando(false);
-      if (exito) navigate('/dashboard');
+      if (exito) {
+        // Redirección manejada por useEffect una vez cargado el usuario
+      }
     } catch (error) {
       setCargando(false);
       // Mostrar errores del backend campo por campo

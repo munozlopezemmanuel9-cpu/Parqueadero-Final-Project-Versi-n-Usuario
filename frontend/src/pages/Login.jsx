@@ -6,7 +6,7 @@ import { MapPin, Mail, Lock, Eye, EyeOff, ShieldCheck, Zap, BarChart3 } from 'lu
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, usuario } = useAuth();
 
   // Form State
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -27,11 +27,16 @@ export default function Login() {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      const from = location.state?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
+    if (isAuthenticated && usuario) {
+      let dest = location.state?.from?.pathname;
+      if (!dest || dest === '/' || dest === '/dashboard' || dest === '/vehiculos') {
+        if (usuario.rol === 'cliente') dest = '/mapa';
+        else if (usuario.rol === 'empleado') dest = '/vehiculos';
+        else dest = '/dashboard';
+      }
+      navigate(dest, { replace: true });
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, usuario, navigate, location]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,8 +60,7 @@ export default function Login() {
     const exito = await login(formData.email, formData.password);
     setCargando(false);
     if (exito) {
-      const from = location.state?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
+      // Redirección manejada por useEffect una vez cargado el usuario
     }
   };
 

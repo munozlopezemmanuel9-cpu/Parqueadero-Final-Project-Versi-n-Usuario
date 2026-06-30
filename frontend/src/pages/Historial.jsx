@@ -8,9 +8,10 @@
 import { useState, useEffect } from 'react';
 import { movimientosAPI } from '../services/api';
 import { Calendar, Download, Filter, Car, Bike, Truck } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import { DollarSign, Activity } from 'lucide-react';
 
 /**
  * Página de Historial
@@ -25,16 +26,56 @@ export default function Historial() {
     placa: '',
   });
 
-  const cargarHistorial = async () => {
+  const cargarHistorial = async (filtrosAUsar = filtros) => {
     setCargando(true);
     try {
-      const response = await movimientosAPI.obtenerHistorico(filtros);
-      setMovimientos(response.data.data.movimientos);
+      const response = await movimientosAPI.obtenerHistorico(filtrosAUsar);
+      setMovimientos(response.data?.data?.movimientos || []);
     } catch (error) {
       toast.error('Error al cargar historial');
     } finally {
       setCargando(false);
     }
+  };
+
+  const aplicarFiltroRapido = (tipo) => {
+    const hoy = new Date();
+    let desde = hoy;
+    let hasta = hoy;
+
+    switch (tipo) {
+      case 'hoy':
+        desde = hoy;
+        hasta = hoy;
+        break;
+      case 'semana':
+        desde = startOfWeek(hoy, { weekStartsOn: 1 });
+        hasta = endOfWeek(hoy, { weekStartsOn: 1 });
+        break;
+      case 'mes':
+        desde = startOfMonth(hoy);
+        hasta = endOfMonth(hoy);
+        break;
+      case 'ano':
+        desde = startOfYear(hoy);
+        hasta = endOfYear(hoy);
+        break;
+    }
+
+    const nuevosFiltros = {
+      ...filtros,
+      fecha_desde: format(desde, 'yyyy-MM-dd'),
+      fecha_hasta: format(hasta, 'yyyy-MM-dd')
+    };
+
+    setFiltros(nuevosFiltros);
+    cargarHistorial(nuevosFiltros);
+  };
+
+  const calcularTotalIngresos = () => {
+    return movimientos
+      .filter(m => m.estado === 'finalizado')
+      .reduce((acc, m) => acc + (m.total_pagar || 0), 0);
   };
 
   useEffect(() => {
@@ -87,7 +128,9 @@ export default function Historial() {
       return;
     }
 
-    const headers = ['Fecha Entrada', 'Fecha Salida', 'Placa', 'Tipo', 'Plaza', 'Duración', 'Total', 'Estado'];
+    const totalIngresos = calcularTotalIngresos();
+    
+    const headers = ['Fecha Entrada', 'Fecha Salida', 'Placa', 'Tipo', 'Plaza', 'Duración', 'Total Cobrado', 'Estado'];
     const csvContent = [
       headers.join(','),
       ...movimientos.map(m => [
@@ -99,7 +142,12 @@ export default function Historial() {
         calcularDuracion(m.fecha_entrada, m.fecha_salida),
         m.total_pagar || 0,
         m.estado
-      ].join(','))
+      ].join(',')),
+      '',
+      '--- RESUMEN FINANCIERO ---',
+      `Rango:,${filtros.fecha_desde},al,${filtros.fecha_hasta}`,
+      `Total Vehículos:,${movimientos.length}`,
+      `Ingresos Totales:,${totalIngresos}`
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -132,9 +180,17 @@ export default function Historial() {
       <div className="glass-card p-6 border-white/5 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gpa-blue/5 rounded-full blur-[80px] pointer-events-none" />
         
-        <div className="flex items-center gap-2 mb-6 relative z-10">
-          <Filter className="w-5 h-5 text-gpa-blue" />
-          <h2 className="text-lg font-bold text-white tracking-wide">Filtros Avanzados</h2>
+        <div className="flex items-center justify-between mb-6 relative z-10">
+          <div className="flex items-center gap-2">
+            <Filter className="w-5 h-5 text-gpa-blue" />
+            <h2 className="text-lg font-bold text-white tracking-wide">Filtros y Reportes</h2>
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            <button onClick={() => aplicarFiltroRapido('hoy')} className="px-3 py-1.5 text-xs font-bold text-white uppercase bg-white/5 hover:bg-gpa-blue/20 rounded-lg transition-colors border border-white/10">Hoy</button>
+            <button onClick={() => aplicarFiltroRapido('semana')} className="px-3 py-1.5 text-xs font-bold text-white uppercase bg-white/5 hover:bg-gpa-blue/20 rounded-lg transition-colors border border-white/10">Semana</button>
+            <button onClick={() => aplicarFiltroRapido('mes')} className="px-3 py-1.5 text-xs font-bold text-white uppercase bg-white/5 hover:bg-gpa-blue/20 rounded-lg transition-colors border border-white/10">Mes</button>
+            <button onClick={() => aplicarFiltroRapido('ano')} className="px-3 py-1.5 text-xs font-bold text-white uppercase bg-white/5 hover:bg-gpa-blue/20 rounded-lg transition-colors border border-white/10">Año</button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 relative z-10">
@@ -198,6 +254,41 @@ export default function Historial() {
           </div>
         </div>
       </div>
+
+      {/* Resumen Financiero del periodo */}
+      {movimientos.length > 0 && !cargando && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+          <div className="glass-card p-5 border-emerald-500/20 bg-emerald-500/5 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-emerald-500/80 font-black uppercase tracking-widest">Ingresos Totales (Periodo)</p>
+              <p className="text-3xl font-black text-emerald-400 mt-1">${calcularTotalIngresos().toLocaleString()}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-emerald-400" />
+            </div>
+          </div>
+          <div className="glass-card p-5 border-white/5 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-slate-500 font-black uppercase tracking-widest">Vehículos Registrados</p>
+              <p className="text-3xl font-black text-white mt-1">{movimientos.length}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
+              <Car className="w-6 h-6 text-slate-400" />
+            </div>
+          </div>
+          <div className="glass-card p-5 border-gpa-blue/20 bg-gpa-blue/5 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gpa-blue/80 font-black uppercase tracking-widest">Ingreso Promedio</p>
+              <p className="text-3xl font-black text-gpa-blue mt-1">
+                ${movimientos.length > 0 ? Math.round(calcularTotalIngresos() / movimientos.filter(m => m.estado === 'finalizado').length || 1).toLocaleString() : 0}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-gpa-blue/20 flex items-center justify-center">
+              <Activity className="w-6 h-6 text-gpa-blue" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tabla de movimientos */}
       <div className="glass-card overflow-hidden border-white/5">

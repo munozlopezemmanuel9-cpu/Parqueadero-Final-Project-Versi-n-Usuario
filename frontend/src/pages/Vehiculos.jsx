@@ -6,9 +6,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { movimientosAPI, vehiculosAPI, plazasAPI } from '../services/api';
+import { movimientosAPI, vehiculosAPI, plazasAPI, reservasAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Car, Bike, Truck, Search, X, DollarSign, Clock, Calendar, CheckCircle } from 'lucide-react';
+import { Car, Bike, Truck, Search, X, DollarSign, Clock, Calendar, CheckCircle, CalendarDays } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 /**
@@ -17,6 +17,7 @@ import toast from 'react-hot-toast';
 function ModalEntrada({ abierto, onClose, onRegistrar, datosIniciales }) {
   const [paso, setPaso] = useState(1);
   const [vehiculo, setVehiculo] = useState({ placa: '', tipo: 'carro', marca: '', modelo: '', color: '' });
+  const [reservaId, setReservaId] = useState(null);
   
   useEffect(() => {
     if (abierto && datosIniciales) {
@@ -25,11 +26,13 @@ function ModalEntrada({ abierto, onClose, onRegistrar, datosIniciales }) {
             placa: datosIniciales.placa,
             tipo: datosIniciales.tipo || 'carro'
         }));
+        if (datosIniciales.reservaId) setReservaId(datosIniciales.reservaId);
     } else if (!abierto) {
         // Reset when closed manually
         setPaso(1);
         setVehiculo({ placa: '', tipo: 'carro', marca: '', modelo: '', color: '' });
         setPlazaSeleccionada(null);
+        setReservaId(null);
     }
   }, [abierto, datosIniciales]);
   const [plazaSeleccionada, setPlazaSeleccionada] = useState(null);
@@ -98,6 +101,7 @@ function ModalEntrada({ abierto, onClose, onRegistrar, datosIniciales }) {
         vehiculo_id: vehiculoId,
         plaza_id: plazaSeleccionada,
         fecha_entrada: new Date().toISOString(),
+        reserva_id: reservaId
       });
 
       // Resetear formulario (ahora se maneja en el useEffect o onClose)
@@ -417,8 +421,10 @@ function ModalSalida({ abierto, movimiento, onClose, onConfirmar }) {
  */
 export default function Vehiculos() {
   const { usuario } = useAuth();
+  const [tabActiva, setTabActiva] = useState('activos'); // 'activos' o 'reservas'
   const [vehiculos, setVehiculos] = useState([]);
   const [vehiculosFiltrados, setVehiculosFiltrados] = useState([]);
+  const [reservasPendientes, setReservasPendientes] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(true);
   const [modalEntradaAbierto, setModalEntradaAbierto] = useState(false);
@@ -454,22 +460,52 @@ export default function Vehiculos() {
     }
   };
 
-  // Filter vehicles by plate search
-  useEffect(() => {
-    if (!busqueda.trim()) {
-      setVehiculosFiltrados(vehiculos);
-    } else {
-      setVehiculosFiltrados(
-        vehiculos.filter(v =>
-          v.placa?.toLowerCase().includes(busqueda.toLowerCase())
-        )
-      );
+  const cargarReservas = async () => {
+    setCargando(true);
+    try {
+      const response = await reservasAPI.obtenerMisReservas();
+      // Filtrar solo las confirmadas/activas para que el empleado las vea
+      const todas = response.data?.data?.reservas || response.data?.data || [];
+      setReservasPendientes(todas.filter(r => r.estado === 'confirmada' || r.estado === 'activa'));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setCargando(false);
     }
-  }, [busqueda, vehiculos]);
+  };
+
+  // Filter vehicles or reservations by plate search
+  useEffect(() => {
+    if (tabActiva === 'activos') {
+      if (!busqueda.trim()) {
+        setVehiculosFiltrados(vehiculos);
+      } else {
+        setVehiculosFiltrados(
+          vehiculos.filter(v =>
+            v.placa?.toLowerCase().includes(busqueda.toLowerCase())
+          )
+        );
+      }
+    } else {
+      if (!busqueda.trim()) {
+        setVehiculosFiltrados(reservasPendientes);
+      } else {
+        setVehiculosFiltrados(
+          reservasPendientes.filter(r =>
+            r.vehiculo_placa?.toLowerCase().includes(busqueda.toLowerCase())
+          )
+        );
+      }
+    }
+  }, [busqueda, vehiculos, reservasPendientes, tabActiva]);
 
   useEffect(() => {
-    cargarVehiculos();
-  }, []);
+    if (tabActiva === 'activos') {
+      cargarVehiculos();
+    } else {
+      cargarReservas();
+    }
+  }, [tabActiva]);
 
   const handleRegistrarEntrada = async (datos) => {
     try {
@@ -477,8 +513,13 @@ export default function Vehiculos() {
         ...datos,
         usuario_registro_id: usuario.id
       });
+      if (datos.reserva_id) {
+        // Marcar la reserva como utilizada
+        await reservasAPI.confirmarLlegada(datos.reserva_id);
+      }
       toast.success('Entrada registrada exitosamente');
-      cargarVehiculos();
+      if (tabActiva === 'activos') cargarVehiculos();
+      else cargarReservas();
     } catch (error) {
       toast.error(error.message || 'Error al registrar entrada');
     }
@@ -495,8 +536,8 @@ export default function Vehiculos() {
       {/* Encabezado */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Vehículos Activos</h1>
-          <p className="text-slate-400 mt-1">Gestiona los vehículos actualmente en el parqueadero</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">Gestión Operativa</h1>
+          <p className="text-slate-400 mt-1">Controla vehículos en sitio y reservas entrantes</p>
         </div>
         <button onClick={() => setModalEntradaAbierto(true)} className="btn-premium flex items-center gap-2 self-start shadow-[0_0_15px_rgba(var(--color-gpa-blue),0.2)]">
           <Car className="w-5 h-5" />
@@ -504,40 +545,70 @@ export default function Vehiculos() {
         </button>
       </div>
 
-      {/* Stats rápidas */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="glass-card p-6 border-white/5 hover:border-white/20 transition-all relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-1 h-full bg-slate-400" />
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Total Activos</p>
-          <p className="text-4xl font-black text-white group-hover:scale-105 transition-transform origin-left">{vehiculos.length}</p>
-        </div>
-        <div className="glass-card p-6 bg-orange-500/5 border-orange-500/10 hover:border-orange-500/30 transition-all relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-1 h-full bg-orange-500" />
-          <p className="text-sm font-bold text-orange-400/80 uppercase tracking-wider mb-2">Motos</p>
-          <p className="text-4xl font-black text-orange-400 group-hover:scale-105 transition-transform origin-left">
-            {vehiculos.filter(v => v.vehiculo_tipo === 'moto').length}
-          </p>
-        </div>
-        <div className="glass-card p-6 bg-gpa-blue/5 border-gpa-blue/10 hover:border-gpa-blue/30 transition-all relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-1 h-full bg-gpa-blue" />
-          <p className="text-sm font-bold text-gpa-blue/80 uppercase tracking-wider mb-2">Carros</p>
-          <p className="text-4xl font-black text-gpa-blue group-hover:scale-105 transition-transform origin-left">
-            {vehiculos.filter(v => v.vehiculo_tipo === 'carro').length}
-          </p>
-        </div>
-        <div className="glass-card p-6 bg-purple-500/5 border-purple-500/10 hover:border-purple-500/30 transition-all relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
-          <p className="text-sm font-bold text-purple-400/80 uppercase tracking-wider mb-2">Camionetas</p>
-          <p className="text-4xl font-black text-purple-400 group-hover:scale-105 transition-transform origin-left">
-            {vehiculos.filter(v => v.vehiculo_tipo === 'camioneta').length}
-          </p>
-        </div>
+      {/* Tabs */}
+      <div className="flex items-center gap-2 border-b border-white/10 pb-1">
+        <button
+          onClick={() => setTabActiva('activos')}
+          className={`flex items-center gap-2 px-6 py-3 font-bold text-sm uppercase tracking-wider transition-all relative ${
+            tabActiva === 'activos' ? 'text-white' : 'text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <Car className="w-4 h-4" /> Vehículos Activos
+          {tabActiva === 'activos' && (
+            <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-gpa-blue shadow-[0_0_10px_rgba(var(--color-gpa-blue),0.8)]" />
+          )}
+        </button>
+        <button
+          onClick={() => setTabActiva('reservas')}
+          className={`flex items-center gap-2 px-6 py-3 font-bold text-sm uppercase tracking-wider transition-all relative ${
+            tabActiva === 'reservas' ? 'text-white' : 'text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <CalendarDays className="w-4 h-4" /> Reservas Pendientes
+          {tabActiva === 'reservas' && (
+            <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-gpa-cyan shadow-[0_0_10px_rgba(var(--color-gpa-cyan),0.8)]" />
+          )}
+        </button>
       </div>
 
-      {/* Lista de vehículos */}
-      <div className="glass-card border-white/5 overflow-hidden">
+      {/* Stats rápidas (Solo para activos) */}
+      {tabActiva === 'activos' && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-fade-in">
+          <div className="glass-card p-6 border-white/5 hover:border-white/20 transition-all relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-slate-400" />
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Total Activos</p>
+            <p className="text-4xl font-black text-white group-hover:scale-105 transition-transform origin-left">{vehiculos.length}</p>
+          </div>
+          <div className="glass-card p-6 bg-orange-500/5 border-orange-500/10 hover:border-orange-500/30 transition-all relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-orange-500" />
+            <p className="text-sm font-bold text-orange-400/80 uppercase tracking-wider mb-2">Motos</p>
+            <p className="text-4xl font-black text-orange-400 group-hover:scale-105 transition-transform origin-left">
+              {vehiculos.filter(v => v.vehiculo_tipo === 'moto').length}
+            </p>
+          </div>
+          <div className="glass-card p-6 bg-gpa-blue/5 border-gpa-blue/10 hover:border-gpa-blue/30 transition-all relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-gpa-blue" />
+            <p className="text-sm font-bold text-gpa-blue/80 uppercase tracking-wider mb-2">Carros</p>
+            <p className="text-4xl font-black text-gpa-blue group-hover:scale-105 transition-transform origin-left">
+              {vehiculos.filter(v => v.vehiculo_tipo === 'carro').length}
+            </p>
+          </div>
+          <div className="glass-card p-6 bg-purple-500/5 border-purple-500/10 hover:border-purple-500/30 transition-all relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
+            <p className="text-sm font-bold text-purple-400/80 uppercase tracking-wider mb-2">Camionetas</p>
+            <p className="text-4xl font-black text-purple-400 group-hover:scale-105 transition-transform origin-left">
+              {vehiculos.filter(v => v.vehiculo_tipo === 'camioneta').length}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Lista Principal */}
+      <div className="glass-card border-white/5 overflow-hidden animate-fade-in">
         <div className="p-6 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-lg font-bold text-white">Vehículos Estacionados</h2>
+          <h2 className="text-lg font-bold text-white">
+            {tabActiva === 'activos' ? 'Vehículos Estacionados' : 'Reservas Pendientes del Día'}
+          </h2>
           <div className="relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-gpa-blue transition-colors" />
             <input
@@ -554,43 +625,74 @@ export default function Vehiculos() {
           <div className="flex items-center justify-center py-20">
             <div className="w-10 h-10 border-4 border-white/10 border-t-gpa-blue rounded-full animate-spin" />
           </div>
-        ) : vehiculos.length > 0 ? (
+        ) : vehiculosFiltrados.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse whitespace-nowrap">
               <thead>
                 <tr className="bg-white/5 border-b border-white/10">
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Placa</th>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Tipo</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Plaza</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Hora Entrada</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Tiempo</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Usuario</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Acciones</th>
+                  {tabActiva === 'activos' ? (
+                    <>
+                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Plaza</th>
+                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Hora Entrada</th>
+                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Tiempo</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Sede</th>
+                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Llegada Est.</th>
+                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Código QR</th>
+                    </>
+                  )}
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {vehiculosFiltrados.map((movimiento) => {
-                  const fechaEntrada = new Date(movimiento.fecha_entrada);
-                  const horas = ((new Date() - fechaEntrada) / (1000 * 60 * 60)).toFixed(1);
+                {vehiculosFiltrados.map((item) => {
+                  if (tabActiva === 'activos') {
+                    const fechaEntrada = new Date(item.fecha_entrada);
+                    const horas = ((new Date() - fechaEntrada) / (1000 * 60 * 60)).toFixed(1);
 
-                  return (
-                    <tr key={movimiento.movimiento_id} className="hover:bg-white/[0.02] transition-colors group">
-                      <td className="p-4 align-middle font-black text-white tracking-widest">{movimiento.placa}</td>
-                      <td className="p-4 align-middle capitalize text-slate-300 font-medium">{movimiento.vehiculo_tipo}</td>
-                      <td className="p-4 align-middle text-slate-300">{movimiento.plaza_nombre}</td>
-                      <td className="p-4 align-middle text-slate-400 font-medium">{fechaEntrada.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                      <td className="p-4 align-middle font-bold text-gpa-cyan">{horas}h</td>
-                      <td className="p-4 align-middle text-slate-400">{movimiento.usuario_registro}</td>
-                      <td className="p-4 align-middle text-right">
-                        <button
-                          onClick={() => setModalSalida({ abierto: true, movimiento })}
-                          className="px-4 py-2 rounded-lg bg-gpa-blue/10 text-gpa-blue border border-gpa-blue/20 hover:bg-gpa-blue hover:text-white transition-colors font-bold text-sm shadow-[0_0_10px_rgba(var(--color-gpa-blue),0.1)]"
-                        >
-                          Salida
-                        </button>
-                      </td>
-                    </tr>
-                  );
+                    return (
+                      <tr key={item.movimiento_id} className="hover:bg-white/[0.02] transition-colors group">
+                        <td className="p-4 align-middle font-black text-white tracking-widest">{item.placa}</td>
+                        <td className="p-4 align-middle capitalize text-slate-300 font-medium">{item.vehiculo_tipo}</td>
+                        <td className="p-4 align-middle text-slate-300">{item.plaza_nombre}</td>
+                        <td className="p-4 align-middle text-slate-400 font-medium">{fechaEntrada.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                        <td className="p-4 align-middle font-bold text-gpa-cyan">{horas}h</td>
+                        <td className="p-4 align-middle text-right">
+                          <button
+                            onClick={() => setModalSalida({ abierto: true, movimiento: item })}
+                            className="px-4 py-2 rounded-lg bg-gpa-blue/10 text-gpa-blue border border-gpa-blue/20 hover:bg-gpa-blue hover:text-white transition-colors font-bold text-sm shadow-[0_0_10px_rgba(var(--color-gpa-blue),0.1)]"
+                          >
+                            Salida
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  } else {
+                    return (
+                      <tr key={item.id} className="hover:bg-white/[0.02] transition-colors group">
+                        <td className="p-4 align-middle font-black text-white tracking-widest">{item.vehiculo_placa}</td>
+                        <td className="p-4 align-middle capitalize text-slate-300 font-medium">{item.vehiculo_tipo}</td>
+                        <td className="p-4 align-middle text-slate-300">{item.parqueaderos?.nombre || 'Sede GPA'}</td>
+                        <td className="p-4 align-middle text-slate-400 font-medium">{new Date(item.fecha_inicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                        <td className="p-4 align-middle font-bold text-slate-300 font-mono text-xs">{item.codigo_reserva}</td>
+                        <td className="p-4 align-middle text-right">
+                          <button
+                            onClick={() => {
+                                setDatosInicialesVoz({ placa: item.vehiculo_placa, tipo: item.vehiculo_tipo, reservaId: item.id });
+                                setModalEntradaAbierto(true);
+                            }}
+                            className="px-4 py-2 rounded-lg bg-gpa-cyan/10 text-gpa-cyan border border-gpa-cyan/20 hover:bg-gpa-cyan hover:text-white transition-colors font-bold text-sm shadow-[0_0_10px_rgba(var(--color-gpa-cyan),0.1)] flex items-center justify-end gap-1.5 w-full max-w-[140px] ml-auto"
+                          >
+                            <Car className="w-4 h-4" /> Ingresar
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  }
                 })}
               </tbody>
             </table>
@@ -598,10 +700,14 @@ export default function Vehiculos() {
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-              <Car className="w-8 h-8 text-slate-500" />
+              {tabActiva === 'activos' ? <Car className="w-8 h-8 text-slate-500" /> : <CalendarDays className="w-8 h-8 text-slate-500" />}
             </div>
-            <p className="text-xl font-bold text-white mb-2">Parqueadero Vacío</p>
-            <p className="text-slate-400">No hay vehículos registrados en este momento</p>
+            <p className="text-xl font-bold text-white mb-2">
+              {tabActiva === 'activos' ? 'Parqueadero Vacío' : 'Sin Reservas Pendientes'}
+            </p>
+            <p className="text-slate-400">
+              {tabActiva === 'activos' ? 'No hay vehículos registrados en este momento' : 'No hay reservas confirmadas pendientes por ingresar.'}
+            </p>
           </div>
         )}
       </div>

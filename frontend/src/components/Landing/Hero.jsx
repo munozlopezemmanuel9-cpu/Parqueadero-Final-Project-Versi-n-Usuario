@@ -3,7 +3,8 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, ShieldCheck, Zap, LayoutDashboard,
-  ChevronDown, Play, Star, Car, Activity, TrendingUp,
+  ChevronDown, Play, Star, Car, Activity, TrendingUp, Search
+
 } from 'lucide-react';
 
 /* ── Floating metric card ── */
@@ -298,14 +299,14 @@ const Hero = () => {
                 </Link>
 
                 <Link
-                  to="/login"
+                  to="/mapa"
                   className="group flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
                 >
                   <div className="w-9 h-9 rounded-full bg-gpa-blue/15 flex items-center justify-center group-hover:bg-gpa-blue/25 transition-colors">
-                    <Play className="w-4 h-4 text-gpa-blue ml-0.5" />
+                    <Search className="w-4 h-4 text-gpa-blue" />
                   </div>
                   <span className="text-slate-300 font-semibold group-hover:text-white transition-colors">
-                    Ver Demo
+                    Buscar Parqueadero
                   </span>
                 </Link>
               </motion.div>

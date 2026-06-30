@@ -219,12 +219,12 @@ class Movimiento {
 
         if (fecha_desde) {
             sql += ' AND m.fecha_entrada >= ?';
-            params.push(fecha_desde);
+            params.push(`${fecha_desde} 00:00:00`);
         }
 
         if (fecha_hasta) {
             sql += ' AND m.fecha_entrada <= ?';
-            params.push(fecha_hasta);
+            params.push(`${fecha_hasta} 23:59:59`);
         }
 
         if (placa) {

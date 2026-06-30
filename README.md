@@ -1,362 +1,336 @@
-# GPA Parqueadero - Sistema de Gestión
+# GPA Parqueadero — Sistema de Gestión Inteligente
 
-Sistema completo para la gestión de parqueaderos con frontend en React, backend en Node.js/Express y base de datos MySQL.
+> Sistema SaaS completo para la gestión de parqueaderos en Medellín, Colombia.  
+> Frontend React 18 · Backend Node.js/Express · Base de datos Supabase (PostgreSQL) · Pagos Stripe.
 
-## 🏗️ Estructura del Proyecto
+---
+
+## 🏗️ Arquitectura General
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    CLIENTE (Navegador)                   │
+│           React 18 + Vite + Tailwind CSS                 │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+          ▼                         ▼
+┌─────────────────┐      ┌─────────────────────┐
+│    SUPABASE      │      │  Backend Node.js     │
+│  (BD principal)  │      │  Express · Puerto 3000│
+│                  │      │                      │
+│ • Auth (JWT)     │      │ Solo para:           │
+│ • Usuarios       │      │ • Pagos (Stripe)     │
+│ • Vehículos      │      │ • Suscripciones      │
+│ • Plazas         │      └──────────┬──────────┘
+│ • Movimientos    │                 │
+│ • Parqueaderos   │                 ▼
+│ • Reservas       │      ┌─────────────────────┐
+│ • Calificaciones │      │       STRIPE          │
+└─────────────────┘      │  Pagos en línea       │
+                          └─────────────────────┘
+```
+
+---
+
+## 📋 Estructura del Proyecto
 
 ```
 gpa-parqueadero/
-├── backend/                 # Servidor Node.js/Express
+├── backend/                     # Servidor Node.js/Express
 │   ├── src/
-│   │   ├── config/         # Configuración de base de datos
-│   │   ├── controllers/    # Lógica de negocio
-│   │   ├── middlewares/    # Autenticación y validaciones
-│   │   ├── models/         # Modelos de datos
-│   │   ├── routes/         # Rutas de la API
-│   │   └── server.js       # Punto de entrada
+│   │   ├── config/             # Configuración de base de datos
+│   │   ├── controllers/        # Lógica de negocio
+│   │   │   ├── authController.js
+│   │   │   ├── pagosController.js       ← Stripe
+│   │   │   ├── suscripcionesController.js ← Suscripciones
+│   │   │   └── ...
+│   │   ├── middlewares/        # JWT y validaciones
+│   │   ├── models/             # Modelos de datos
+│   │   ├── routes/             # Rutas de la API
+│   │   └── server.js
 │   ├── database/
-│   │   └── schema.sql      # Script de base de datos
-│   ├── .env.example        # Variables de entorno de ejemplo
-│   └── package.json
+│   │   ├── schema.sql           # Esquema MySQL (legacy/referencia)
+│   │   └── supabase_reservas.sql ← Script para crear tabla en Supabase
+│   └── .env.example
 │
-└── frontend/               # Aplicación React
+└── frontend/                    # Aplicación React
     ├── src/
-    │   ├── components/     # Componentes reutilizables
-    │   ├── context/        # Contextos de React
-    │   ├── pages/          # Páginas de la aplicación
-    │   ├── services/       # Servicios de API
-    │   ├── App.jsx         # Componente principal
-    │   ├── main.jsx        # Punto de entrada
-    │   └── index.css       # Estilos globales
-    ├── index.html
+    │   ├── components/         # Componentes reutilizables
+    │   │   ├── ModalReserva.jsx    # Comprobante con QR
+    │   │   ├── SistemaCalificacion.jsx
+    │   │   ├── VoiceAssistant.jsx
+    │   │   ├── TarjetaParqueadero.jsx
+    │   │   └── StripeCheckout.jsx
+    │   ├── context/
+    │   │   └── AuthContext.jsx  # Auth con Supabase
+    │   ├── pages/              # Páginas de la aplicación
+    │   │   ├── Dashboard.jsx   # Panel admin
+    │   │   ├── MapaParqueaderos.jsx
+    │   │   ├── Reservar.jsx    # Flujo de reserva (3 pasos)
+    │   │   ├── MisReservas.jsx # Gestión de reservas del cliente
+    │   │   ├── Suscripciones.jsx
+    │   │   ├── Vehiculos.jsx
+    │   │   ├── Plazas.jsx
+    │   │   ├── Historial.jsx
+    │   │   └── ...
+    │   ├── services/
+    │   │   └── api.js          # Todos los servicios de Supabase + backend
+    │   └── config/
+    │       └── supabase.js     # Cliente Supabase
     └── package.json
 ```
 
-## 📋 Requisitos Previos
+---
 
-Antes de comenzar, asegúrate de tener instalado:
+## 🎯 Características Implementadas
 
-- **Node.js** (versión 18 o superior) - [Descargar](https://nodejs.org/)
-- **MySQL** (versión 8.0 o superior) - [Descargar](https://dev.mysql.com/downloads/)
-- **Git** (opcional, para clonar el repositorio)
+### Sistema de Autenticación
+- ✅ Registro y login con Supabase Auth
+- ✅ JWT para gestión de sesiones
+- ✅ Roles: **Admin**, **Empleado** y **Cliente**
+- ✅ Control de acceso por rol (rutas protegidas)
+- ✅ Persistencia de sesión con localStorage
 
-## 🚀 Instrucciones de Instalación
+### Portal del Cliente
+- ✅ Mapa interactivo de parqueaderos en Medellín
+- ✅ Búsqueda por distancia (geolocalización)
+- ✅ Flujo de reserva en 3 pasos (fecha → vehículo → pago)
+- ✅ Código QR único por reserva
+- ✅ Panel "Mis Reservas" con acciones (Llegué / Cancelar)
+- ✅ Historial y calificación de sedes
+- ✅ Suscripciones mensuales a parqueaderos
+- ✅ Asistente de voz integrado
 
-### Paso 1: Configurar la Base de Datos
+### Panel de Administración (Admin/Empleado)
+- ✅ Dashboard con estadísticas en tiempo real
+- ✅ Gráficos de ocupación por tipo de vehículo
+- ✅ Gestión de Plazas (CRUD completo)
+- ✅ Gestión de Vehículos (registro, búsqueda por placa)
+- ✅ Registro de Entrada y Salida de vehículos
+- ✅ Historial completo con filtros (placa, estado, fecha)
+- ✅ Gestión de Usuarios (solo Admin)
 
-1. **Inicia MySQL** en tu sistema
+### UI/UX
+- ✅ Diseño dark mode premium estilo SaaS
+- ✅ Responsive (móvil y escritorio)
+- ✅ Animaciones y transiciones suaves
+- ✅ Notificaciones toast
+- ✅ Skeletons de carga
+- ✅ Modales con backdrop blur
+- ✅ Confetti al confirmar reserva
 
-2. **Ejecuta el script SQL** para crear la base de datos:
+---
+
+## 🛠️ Stack Tecnológico
+
+### Frontend
+| Tecnología | Uso |
+|---|---|
+| React 18 | Framework UI |
+| Vite | Build tool + dev server |
+| Tailwind CSS | Estilos |
+| React Router DOM | Navegación |
+| Supabase JS | Base de datos y auth |
+| Recharts | Gráficos del dashboard |
+| Lucide React | Íconos |
+| React Hot Toast | Notificaciones |
+| React QR Code | Código QR de reservas |
+| Canvas Confetti | Animación de confirmación |
+| date-fns | Manejo de fechas |
+
+### Backend
+| Tecnología | Uso |
+|---|---|
+| Node.js + Express | Servidor API |
+| Stripe | Procesamiento de pagos |
+| JWT | Autenticación |
+| Bcryptjs | Hash de contraseñas |
+| MySQL2 | BD local (legacy) |
+| Helmet | Seguridad HTTP |
+| Morgan | Logging |
+
+### Infraestructura
+| Servicio | Uso |
+|---|---|
+| Supabase | Base de datos PostgreSQL + Auth en la nube |
+| Stripe | Pagos online |
+
+---
+
+## 🗃️ Modelo de Datos (Supabase)
+
+```
+usuarios            parqueaderos
+──────────          ────────────────
+id                  id
+nombre              nombre
+email               direccion
+password_hash       barrio / ciudad
+rol                 lat / lng
+activo              capacidad_total
+creado_en           espacios_disponibles
+                    tarifa_hora / tarifa_dia
+                    horario_apertura / cierre
+                    abierto_24h
+                    tiene_camaras / techado
+                    rating_promedio
+                    activo
+
+plazas              vehiculos
+──────              ─────────
+id                  id
+nombre              placa
+tipo                tipo / marca / modelo
+estado              color
+tarifa_por_hora     propietario_id → usuarios
+                    creado_en
+
+movimientos         reservas
+───────────         ────────
+id                  id
+vehiculo_id         usuario_id → usuarios
+plaza_id            parqueadero_id → parqueaderos
+fecha_entrada       vehiculo_placa / tipo
+fecha_salida        fecha_inicio / fin
+estado              horas_estimadas
+total_pagar         total / metodo_pago
+metodo_pago         estado (confirmada|activa|completada|cancelada)
+                    codigo_reserva (QR)
+                    pago_confirmado
+
+calificaciones      suscripciones
+──────────────      ─────────────
+id                  id
+usuario_id          usuario_id → usuarios
+parqueadero_id      parqueadero_id → parqueaderos
+puntuacion_general  fecha_inicio / fin
+comentario          precio_mensual
+creado_en           estado / stripe_subscription_id
+```
+
+---
+
+## 🚀 Instalación y Ejecución
+
+### Requisitos
+- Node.js 18+
+- Cuenta Supabase (ya configurada)
+- (Opcional) Cuenta Stripe para pagos reales
+
+### 1. Configurar Supabase
+
+La base de datos principal ya está en Supabase. Si necesitas crear la tabla de reservas:
 
 ```bash
-# Desde la carpeta backend
-mysql -u root -p < database/schema.sql
+# En Supabase Dashboard → SQL Editor
+# Ejecuta el script:
+backend/database/supabase_reservas.sql
 ```
 
-O si prefieres hacerlo manualmente:
+### 2. Instalar y ejecutar el Frontend
 
-```sql
--- Abre MySQL Workbench o la consola MySQL
--- Ejecuta el contenido del archivo backend/database/schema.sql
+```bash
+cd frontend
+npm install
+npm run dev
+# → http://localhost:5173
 ```
 
-3. **Verifica** que la base de datos `gpa_parqueadero` haya sido creada:
+### 3. (Opcional) Instalar y ejecutar el Backend
 
-```sql
-SHOW DATABASES;
-USE gpa_parqueadero;
-SHOW TABLES;
-```
-
-### Paso 2: Configurar el Backend
-
-1. **Navega a la carpeta del backend**:
+El backend solo es necesario para pagos con Stripe real.
 
 ```bash
 cd backend
-```
-
-2. **Instala las dependencias**:
-
-```bash
 npm install
+# Crea el .env desde el ejemplo:
+copy .env.example .env
+# Edita .env con tu STRIPE_SECRET_KEY
+npm run dev
+# → http://localhost:3000
 ```
 
-3. **Crea el archivo de variables de entorno**:
+---
 
-```bash
-# Windows PowerShell
-Copy-Item .env.example .env
+## 🔐 Credenciales de Prueba
 
-# O manualmente: copia el contenido de .env.example a un nuevo archivo .env
+| Rol | Email | Contraseña |
+|---|---|---|
+| Admin | admin@gpa.com | admin123 |
+| Empleado | empleado@gpa.com | empleado123 |
+| Cliente | (registrarse en /registro) | — |
+
+> Los usuarios se crean en Supabase Auth. Si las credenciales no funcionan, registra un nuevo usuario desde la pantalla de Login.
+
+---
+
+## 📡 API del Backend (Stripe / Suscripciones)
+
+El backend Node.js solo expone los endpoints relacionados con pagos:
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| POST | `/api/pagos/create-payment-intent` | Crear intención de pago Stripe |
+| GET | `/api/suscripciones/mis-suscripciones` | Ver suscripciones activas |
+| POST | `/api/suscripciones/adquirir` | Adquirir nueva suscripción |
+
+---
+
+## 🔧 Variables de Entorno
+
+### Frontend (`frontend/.env`)
+```env
+VITE_API_URL=http://localhost:3000/api
 ```
 
-4. **Edita el archivo `.env`** con tus credenciales de MySQL:
-
+### Backend (`backend/.env`)
 ```env
 PORT=3000
 NODE_ENV=development
 
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=tu_contraseña_mysql
-DB_NAME=gpa_parqueadero
-DB_PORT=3306
+# Supabase (opcional, para validar tokens JWT desde el backend)
+SUPABASE_URL=https://jrkoqmvhcfrqtuibstjl.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<tu service role key>
 
-JWT_SECRET=tu_secreto_muy_seguro_cambialo_en_produccion
+# Stripe
+STRIPE_SECRET_KEY=sk_test_<tu_clave>
+
+# JWT (solo si usas auth del backend)
+JWT_SECRET=tu_secreto_muy_seguro
 JWT_EXPIRES_IN=24h
 
 FRONTEND_URL=http://localhost:5173
 ```
 
-### Paso 3: Configurar el Frontend
+---
 
-1. **Abre una nueva terminal** y navega a la carpeta del frontend:
+## 📝 Notas Técnicas
 
-```bash
-cd frontend
-```
+1. **Supabase es la BD principal**: Todo el CRUD de negocio (reservas, vehículos, plazas, movimientos) usa Supabase directamente desde el frontend mediante Row Level Security (RLS).
 
-2. **Instala las dependencias**:
+2. **El backend Node.js** existe para integrar con Stripe (que requiere la clave secreta, la cual nunca debe exponerse en el frontend).
 
-```bash
-npm install
-```
+3. **RLS en Supabase**: Cada usuario solo puede ver y modificar sus propios datos. Los admins tienen acceso total.
 
-3. **(Opcional) Crea el archivo `.env`** si necesitas configurar la URL del backend:
-
-```bash
-# En frontend/.env
-VITE_API_URL=http://localhost:3000/api
-```
-
-## ▶️ Ejecutar la Aplicación
-
-### Opción A: Ejecutar por separado (Recomendado para desarrollo)
-
-**Terminal 1 - Backend:**
-
-```bash
-cd backend
-npm run dev
-```
-
-El servidor se ejecutará en `http://localhost:3000`
-
-**Terminal 2 - Frontend:**
-
-```bash
-cd frontend
-npm run dev
-```
-
-La aplicación se ejecutará en `http://localhost:5173`
-
-### Opción B: Script unificado (Crear en la raíz)
-
-Crea un archivo `start.bat` en la raíz del proyecto (Windows):
-
-```batch
-@echo off
-start cmd /k "cd backend && npm run dev"
-start cmd /k "cd frontend && npm run dev"
-```
-
-O `start.sh` (Linux/Mac):
-
-```bash
-#!/bin/bash
-gnome-terminal -- bash -c "cd backend && npm run dev; exec bash"
-gnome-terminal -- bash -c "cd frontend && npm run dev; exec bash"
-```
-
-## 🔐 Credenciales de Acceso
-
-Al iniciar la aplicación, usa estas credenciales de prueba:
-
-### Administrador
-- **Email:** `admin@gpa.com`
-- **Contraseña:** `admin123`
-
-### Empleado
-- **Email:** `empleado@gpa.com`
-- **Contraseña:** `empleado123`
-
-> **Nota:** Las contraseñas reales se generan con bcrypt. Si las credenciales no funcionan, deberás registrar un nuevo usuario desde la API o actualizar los hashes en la base de datos.
-
-## 📡 Endpoints de la API
-
-### Autenticación
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/auth/registro` | Registrar nuevo usuario |
-| POST | `/api/auth/login` | Iniciar sesión |
-| GET | `/api/auth/perfil` | Obtener perfil (requiere auth) |
-| PUT | `/api/auth/perfil` | Actualizar perfil (requiere auth) |
-
-### Usuarios (Solo Admin)
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/usuarios` | Listar usuarios |
-| GET | `/api/usuarios/:id` | Obtener usuario por ID |
-| POST | `/api/usuarios` | Crear usuario |
-| PUT | `/api/usuarios/:id` | Actualizar usuario |
-| DELETE | `/api/usuarios/:id` | Eliminar usuario |
-
-### Vehículos
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/vehiculos` | Registrar vehículo |
-| GET | `/api/vehiculos/placa/:placa` | Buscar por placa |
-| GET | `/api/vehiculos/historial` | Historial de vehículos |
-| PUT | `/api/vehiculos/:id` | Actualizar vehículo |
-
-### Movimientos
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/movimientos/entrada` | Registrar entrada |
-| POST | `/api/movimientos/salida/:id` | Registrar salida |
-| GET | `/api/movimientos/en-parqueadero` | Vehículos actuales |
-| GET | `/api/movimientos/historico` | Histórico con filtros |
-| GET | `/api/movimientos/estadisticas` | Estadísticas |
-| GET | `/api/movimientos/calcular-costo/:id` | Calcular costo |
-
-### Plazas
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/plazas` | Listar plazas |
-| GET | `/api/plazas/disponibles` | Plazas disponibles |
-| GET | `/api/plazas/:id` | Obtener plaza |
-| POST | `/api/plazas` | Crear plaza (Admin) |
-| PUT | `/api/plazas/:id` | Actualizar plaza (Admin) |
-| DELETE | `/api/plazas/:id` | Eliminar plaza (Admin) |
-
-## 🎯 Características Principales
-
-### Sistema de Autenticación
-- ✅ Registro y login de usuarios
-- ✅ JWT para gestión de sesiones
-- ✅ Roles: Admin y Empleado
-- ✅ Control de acceso por roles
-
-### Gestión de Parqueadero
-- ✅ Registro de vehículos con placa, tipo, marca, modelo, color
-- ✅ Registro de entrada con asignación de plaza
-- ✅ Registro de salida con cálculo automático de tiempo y costo
-- ✅ Historial completo de movimientos
-- ✅ Visualización de plazas ocupadas/libres
-
-### Dashboard
-- ✅ Estadísticas en tiempo real
-- ✅ Conteo de espacios ocupados/libres
-- ✅ Vehículos actuales en el parqueadero
-- ✅ Gráficos por tipo de vehículo
-- ✅ Total recaudado del día
-
-### Diseño UI/UX
-- ✅ Interfaz moderna estilo SaaS
-- ✅ Diseño responsive (móvil y escritorio)
-- ✅ Tailwind CSS para estilos
-- ✅ Notificaciones toast
-- ✅ Sidebar de navegación
-- ✅ Modales para formularios
-
-## 🛠️ Tecnologías Utilizadas
-
-### Frontend
-- React 18
-- React Router DOM
-- Tailwind CSS
-- Axios
-- Recharts (gráficos)
-- Lucide React (iconos)
-- React Hot Toast (notificaciones)
-- date-fns (manejo de fechas)
-- Vite (build tool)
-
-### Backend
-- Node.js
-- Express
-- MySQL2 (con pool de conexiones)
-- Bcryptjs (hash de contraseñas)
-- JSON Web Token (JWT)
-- Express Validator
-- Helmet (seguridad)
-- Morgan (logging)
-- CORS
-
-## 🔧 Solución de Problemas
-
-### Error: "No se puede conectar a la base de datos"
-
-1. Verifica que MySQL esté ejecutándose:
-```bash
-# Windows
-services.msc  # Busca "MySQL" y asegúrate de que esté iniciado
-
-# Linux
-sudo systemctl status mysql
-```
-
-2. Verifica las credenciales en `backend/.env`
-
-3. Asegúrate de haber ejecutado el script `schema.sql`
-
-### Error: "CORS" en el frontend
-
-1. Verifica que `FRONTEND_URL` en `backend/.env` coincida con el puerto del frontend
-
-2. En desarrollo, Vite usa proxy automático configurado en `vite.config.js`
-
-### Error: "Puerto ya en uso"
-
-```bash
-# Windows - Matar proceso por puerto
-netstat -ano | findstr :3000
-taskkill /PID <PID> /F
-
-# Linux/Mac
-lsof -ti:3000 | xargs kill -9
-```
-
-## 📝 Notas Importantes
-
-1. **Seguridad en Producción:**
-   - Cambia `JWT_SECRET` por un valor seguro
-   - Usa HTTPS
-   - Configura CORS solo para tu dominio
-   - No expongas el puerto de MySQL
-
-2. **Backup de Base de Datos:**
-```bash
-mysqldump -u root -p gpa_parqueadero > backup.sql
-```
-
-3. **Restaurar Backup:**
-```bash
-mysql -u root -p gpa_parqueadero < backup.sql
-```
-
-## 👨‍💻 Comandos Útiles
-
-### Backend
-```bash
-npm run dev      # Desarrollo con auto-reload
-npm start        # Producción
-npm test         # Ejecutar tests
-```
-
-### Frontend
-```bash
-npm run dev      # Desarrollo con HMR
-npm run build    # Build de producción
-npm run preview  # Preview del build
-```
-
-## 📄 Licencia
-
-Este proyecto es de código abierto y está disponible bajo la licencia MIT.
+4. **`schema.sql`** en `backend/database/` es el esquema legacy de MySQL y sirve como referencia técnica. No se usa en producción.
 
 ---
 
-**Desarrollado con ❤️ para GPA Parqueadero**
+## 👨‍💻 Comandos de Desarrollo
+
+```bash
+# Frontend
+npm run dev       # Servidor de desarrollo con HMR
+npm run build     # Build de producción
+npm run preview   # Preview del build
+
+# Backend
+npm run dev       # Desarrollo con auto-reload (nodemon)
+npm start         # Producción
+```
+
+---
+
+**Desarrollado con ❤️ para GPA Parqueadero · Medellín, Colombia**

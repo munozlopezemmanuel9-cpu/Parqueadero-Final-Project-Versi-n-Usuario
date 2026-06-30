@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { movimientosAPI } from '../services/api';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { movimientosAPI, parqueaderosAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { SkeletonStatCards, SkeletonChart, SkeletonVehicleRow, SkeletonText } from '../components/Skeleton';
 import {
   Car,
   Bike,
@@ -15,7 +17,10 @@ import {
   PlusCircle,
   ClipboardList,
   Users,
-  Zap
+  Zap,
+  MapPin,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 
 /**
@@ -115,17 +120,21 @@ export default function Dashboard() {
   const { usuario } = useAuth();
   const [estadisticas, setEstadisticas] = useState(null);
   const [vehiculosEnParqueadero, setVehiculosEnParqueadero] = useState([]);
+  const [parqueaderos, setParqueaderos] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   const cargarDatos = async () => {
     setCargando(true);
     try {
-      const [statsResponse, vehiculosResponse] = await Promise.all([
+      const [statsResponse, vehiculosResponse, parqueaderosResponse] = await Promise.all([
         movimientosAPI.obtenerEstadisticas(),
         movimientosAPI.obtenerEnParqueadero(),
+        parqueaderosAPI.listar(),
       ]);
       setEstadisticas(statsResponse.data.data.general);
-      setVehiculosEnParqueadero(vehiculosResponse.data.data.movimientos);
+      setVehiculosEnParqueadero(vehiculosResponse.data.data.movimientos || []);
+      const listap = parqueaderosResponse?.data?.data;
+      setParqueaderos(Array.isArray(listap) ? listap : []);
     } catch (error) {
       console.error('Error al cargar datos:', error);
     } finally {
@@ -136,6 +145,16 @@ export default function Dashboard() {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  const chartData = [
+    { name: 'Lun', ingresos: 450000 },
+    { name: 'Mar', ingresos: 520000 },
+    { name: 'Mie', ingresos: 480000 },
+    { name: 'Jue', ingresos: 610000 },
+    { name: 'Vie', ingresos: 850000 },
+    { name: 'Sab', ingresos: 980000 },
+    { name: 'Dom', ingresos: 720000 },
+  ];
 
   const ocupacionPorcentaje = estadisticas
     ? Math.round((estadisticas.plazas_ocupadas / estadisticas.plazas_totales) * 100)
@@ -211,44 +230,48 @@ export default function Dashboard() {
       </div>
 
       {/* Grid de Métricas Críticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          titulo="Plazas Libres"
-          valor={estadisticas?.plazas_libres || '0'}
-          subtexto="Disponibilidad Real"
-          icono={TrendingUp}
-          colorBar="bg-emerald-500"
-          colorText="text-emerald-400"
-          colorBg="bg-emerald-500/10"
-        />
-        <StatCard
-          titulo="Plazas Ocupadas"
-          valor={estadisticas?.plazas_ocupadas || '0'}
-          subtexto={`${ocupacionPorcentaje}% de capacidad`}
-          icono={Car}
-          colorBar="bg-gpa-blue"
-          colorText="text-gpa-blue"
-          colorBg="bg-gpa-blue/10"
-        />
-        <StatCard
-          titulo="Flujo del Día"
-          valor={estadisticas?.movimientos_hoy || '0'}
-          subtexto="Ingresos Totales"
-          icono={Clock}
-          colorBar="bg-purple-500"
-          colorText="text-purple-400"
-          colorBg="bg-purple-500/10"
-        />
-        <StatCard
-          titulo="Ingresos Brutos"
-          valor={`$${(estadisticas?.recaudado_hoy || 0).toLocaleString()}`}
-          subtexto="Corte de Caja"
-          icono={DollarSign}
-          colorBar="bg-amber-500"
-          colorText="text-amber-400"
-          colorBg="bg-amber-500/10"
-        />
-      </div>
+      {cargando ? (
+        <SkeletonStatCards count={4} />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            titulo="Plazas Libres"
+            valor={estadisticas?.plazas_libres || '0'}
+            subtexto="Disponibilidad Real"
+            icono={TrendingUp}
+            colorBar="bg-emerald-500"
+            colorText="text-emerald-400"
+            colorBg="bg-emerald-500/10"
+          />
+          <StatCard
+            titulo="Plazas Ocupadas"
+            valor={estadisticas?.plazas_ocupadas || '0'}
+            subtexto={`${ocupacionPorcentaje}% de capacidad`}
+            icono={Car}
+            colorBar="bg-gpa-blue"
+            colorText="text-gpa-blue"
+            colorBg="bg-gpa-blue/10"
+          />
+          <StatCard
+            titulo="Flujo del Día"
+            valor={estadisticas?.movimientos_hoy || '0'}
+            subtexto="Ingresos Totales"
+            icono={Clock}
+            colorBar="bg-purple-500"
+            colorText="text-purple-400"
+            colorBg="bg-purple-500/10"
+          />
+          <StatCard
+            titulo="Ingresos Brutos"
+            valor={`$${(estadisticas?.recaudado_hoy || 0).toLocaleString()}`}
+            subtexto="Corte de Caja"
+            icono={DollarSign}
+            colorBar="bg-amber-500"
+            colorText="text-amber-400"
+            colorBg="bg-amber-500/10"
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Columna Principal (8) */}
@@ -285,6 +308,37 @@ export default function Dashboard() {
             </div>
           </section>
 
+          {/* Gráfica de Ingresos */}
+          {cargando ? (
+            <SkeletonChart />
+          ) : (
+            <div className="glass-card p-6 border-white/5 bg-white/[0.01]">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-black text-white uppercase tracking-tighter">Tendencia de Ingresos</h3>
+                  <p className="text-xs text-slate-500 uppercase font-bold mt-1">Últimos 7 días</p>
+                </div>
+                <div className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase">
+                  +15% vs Semana Pasada
+                </div>
+              </div>
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} tickFormatter={(value) => `$${value / 1000}k`} />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                      contentStyle={{ backgroundColor: '#0a0a0d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}
+                      formatter={(value) => [`$${value.toLocaleString()}`, 'Ingresos']}
+                    />
+                    <Bar dataKey="ingresos" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
           {/* Vehículos en Vivo */}
           <div className="glass-card p-8 border-white/5 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-gpa-blue/5 blur-[80px] pointer-events-none" />
@@ -306,8 +360,11 @@ export default function Dashboard() {
             </div>
 
             {cargando ? (
-              <div className="flex items-center justify-center py-24">
-                <div className="w-12 h-12 border-4 border-white/10 border-t-gpa-blue rounded-full animate-spin shadow-[0_0_20px_rgba(var(--color-gpa-blue),0.3)]" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                <SkeletonVehicleRow />
+                <SkeletonVehicleRow />
+                <SkeletonVehicleRow />
+                <SkeletonVehicleRow />
               </div>
             ) : vehiculosEnParqueadero.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -333,14 +390,14 @@ export default function Dashboard() {
           <div className="glass-card p-8 border-white/5 relative overflow-hidden flex flex-col h-full">
             <div className="absolute top-[-50px] right-[-50px] w-[200px] h-[200px] bg-gpa-purple/10 rounded-full blur-[80px] pointer-events-none" />
             
-            <div className="mb-10">
+            <div className="mb-6">
               <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
                 Carga <span className="text-gpa-purple">Analítica</span>
               </h2>
               <p className="text-xs text-slate-500 font-bold uppercase mt-1">Distribución por segmento</p>
             </div>
 
-            <div className="space-y-10 flex-1">
+            <div className="space-y-8 flex-1">
               {[
                 { tipo: 'Carros', key: 'carro', icono: Car, color: 'bg-gpa-blue', glow: 'shadow-[0_0_15px_rgba(var(--color-gpa-blue),0.4)]' },
                 { tipo: 'Motos', key: 'moto', icono: Bike, color: 'bg-orange-500', glow: 'shadow-[0_0_15px_rgba(249,115,22,0.4)]' },
@@ -348,7 +405,7 @@ export default function Dashboard() {
               ].map((item) => {
                 const Icono = item.icono;
                 const ocupadas = estadisticas?.ocupacion_por_tipo?.[item.key] || 0;
-                const totales = 10; // Asumido
+                const totales = 10;
                 const porcentaje = Math.min((ocupadas / totales) * 100, 100);
 
                 return (
@@ -378,7 +435,7 @@ export default function Dashboard() {
             </div>
 
             {/* Círculo de Ocupación */}
-            <div className="mt-12 pt-10 border-t border-white/10 relative">
+            <div className="mt-10 pt-8 border-t border-white/10 relative">
               <div className="relative flex flex-col items-center justify-center">
                 <div className="absolute inset-0 bg-gpa-blue/10 blur-[60px] rounded-full" />
                 <p className="text-7xl font-black text-white tracking-tighter drop-shadow-2xl relative z-10">
@@ -386,6 +443,52 @@ export default function Dashboard() {
                 </p>
                 <p className="text-[10px] text-slate-500 mt-2 uppercase tracking-[0.4em] font-black relative z-10">Ocupación Sistema</p>
               </div>
+            </div>
+          </div>
+
+          {/* Sedes de Parqueadero en plataforma */}
+          <div className="glass-card p-6 border-white/5 relative overflow-hidden">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-xl font-black text-white uppercase tracking-tighter">
+                  Sedes <span className="text-gpa-cyan">Activas</span>
+                </h2>
+                <p className="text-xs text-slate-500 font-bold uppercase mt-0.5">Plataforma en línea</p>
+              </div>
+              <Link to="/mapa" className="text-[10px] font-black text-gpa-blue uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1">
+                Ver Mapa <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <div className="space-y-2.5">
+              {cargando ? (
+                <div className="space-y-4 py-2">
+                  <SkeletonText lines={2} />
+                  <SkeletonText lines={2} />
+                </div>
+              ) : parqueaderos.length === 0 ? (
+                <p className="text-slate-600 text-xs text-center py-6">Sin datos de sedes</p>
+              ) : (
+                parqueaderos.slice(0, 5).map((p) => (
+                  <div key={p.id} className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: p.espacios_disponibles === 0 ? 'rgba(239,68,68,0.1)' : 'rgba(59,130,246,0.1)' }}>
+                        <MapPin className="w-4 h-4" style={{ color: p.espacios_disponibles === 0 ? '#ef4444' : '#3b82f6' }} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-white truncate">{p.nombre}</p>
+                        <p className="text-[9px] text-slate-500 font-medium">{p.barrio}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      {p.espacios_disponibles === 0 ? (
+                        <span className="text-[9px] font-black px-2 py-1 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>Lleno</span>
+                      ) : (
+                        <span className="text-[9px] font-black px-2 py-1 rounded-lg" style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }}>{p.espacios_disponibles} libre{p.espacios_disponibles !== 1 ? 's' : ''}</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

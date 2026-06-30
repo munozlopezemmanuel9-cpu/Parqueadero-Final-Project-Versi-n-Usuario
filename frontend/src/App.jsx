@@ -1,19 +1,14 @@
 /**
- * Componente Principal de la Aplicación GPA
- *
- * Configura el enrutamiento y provee los contextos
- * necesarios para toda la aplicación.
- *
- * SISTEMA DE ROLES:
- * - Admin: Acceso total (Dashboard, Vehículos, Plazas, Historial, Usuarios)
- * - Empleado: Acceso operativo (Dashboard, Vehículos, Plazas, Historial) SIN Usuarios
+ * App.jsx v3.0 — Ecosistema GPA Parqueaderos
+ * Rutas para admin, empleado y cliente
  */
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { AnimatePresence, motion } from 'framer-motion';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Páginas
+// Páginas Staff (admin/empleado)
 import Login from './pages/Login';
 import Registro from './pages/Registro';
 import Dashboard from './pages/Dashboard';
@@ -23,28 +18,25 @@ import Historial from './pages/Historial';
 import Usuarios from './pages/Usuarios';
 import Landing from './pages/Landing';
 
+// Páginas Cliente (NUEVAS)
+import MapaParqueaderos from './pages/MapaParqueaderos';
+import Reservar from './pages/Reservar';
+import MisReservas from './pages/MisReservas';
+import Perfil from './pages/Perfil';
+import ClientPortal from './pages/ClientPortal';
+
 // Componentes
 import Layout from './components/Layout';
+import LayoutCliente from './components/LayoutCliente';
 import VoiceAssistant from './components/VoiceAssistant';
 import FaqDrawer from './components/FaqDrawer';
 
 /**
- * Ruta protegida
- *
- * Redirige al login si el usuario no está autenticado.
- * También verifica el rol si se requiere uno específico.
- *
- * IMPORTANTE: El parámetro rolRequerido='admin' hace que la ruta
- * sea EXCLUSIVA para administradores. Los empleados serán redirigidos.
- *
- * @param {Object} props - Props de la ruta
- * @param {ReactNode} props.children - Componente a renderizar
- * @param {string} props.rolRequerido - Rol requerido (opcional, 'admin' para rutas exclusivas)
+ * Ruta protegida para staff (admin/empleado)
  */
 function RutaProtegida({ children, rolRequerido }) {
-  const { isAuthenticated, isAdmin, usuario, cargando } = useAuth();
+  const { isAuthenticated, isAdmin, isStaff, usuario, cargando } = useAuth();
 
-  // Loading state
   if (cargando) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -56,87 +48,96 @@ function RutaProtegida({ children, rolRequerido }) {
     );
   }
 
-  // Si no está autenticado, redirigir a login
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  // Si la ruta requiere admin y el usuario NO es admin, redirigir a vehiculos
-  // ESTO EVITA QUE LOS EMPLEADOS ACCEDAN AL DASHBOARD FINANCIERO O USUARIOS
   if (rolRequerido === 'admin' && !isAdmin) {
-    console.warn(`Acceso denegado: El usuario ${usuario?.nombre} (${usuario?.rol}) intentó acceder a una ruta exclusiva de admin`);
+    console.warn(`Acceso denegado: ${usuario?.nombre} (${usuario?.rol})`);
     return <Navigate to="/vehiculos" replace />;
   }
 
-  return (
-    <Layout>
-      {children}
-    </Layout>
-  );
+  // Si es un cliente intentando acceder a rutas de staff, redirigirlo a su panel
+  if (isAuthenticated && usuario?.rol === 'cliente') {
+    return <Navigate to="/mapa" replace />;
+  }
+
+  return <Layout>{children}</Layout>;
 }
 
 /**
- * Componente de Rutas de la Aplicación
+ * Ruta protegida para clientes
  */
-function AppRoutes() {
+function RutaCliente({ children }) {
+  const { isAuthenticated, usuario, cargando } = useAuth();
+
+  if (cargando) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#07070a]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-white/10 border-t-gpa-blue rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-400 font-bold tracking-widest uppercase">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  // Staff accediendo a rutas de cliente → redirigir a dashboard
+  if (usuario?.rol === 'admin') return <Navigate to="/dashboard" replace />;
+  if (usuario?.rol === 'empleado') return <Navigate to="/vehiculos" replace />;
+
+  return <LayoutCliente>{children}</LayoutCliente>;
+}
+
+// Componente para animar rutas
+function PageTransition({ children }) {
   return (
-    <Routes>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4, ease: 'easeInOut' }}
+      className="w-full h-full"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function AppRoutes() {
+  const location = useLocation();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
       {/* Rutas públicas */}
-      <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/registro" element={<Registro />} />
+      <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
+      <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+      <Route path="/registro" element={<PageTransition><Registro /></PageTransition>} />
 
-      {/* Rutas protegidas */}
-      <Route
-        path="/dashboard"
-        element={
-          <RutaProtegida rolRequerido="admin">
-            <Dashboard />
-          </RutaProtegida>
-        }
-      />
-      <Route
-        path="/vehiculos"
-        element={
-          <RutaProtegida>
-            <Vehiculos />
-          </RutaProtegida>
-        }
-      />
-      <Route
-        path="/plazas"
-        element={
-          <RutaProtegida>
-            <Plazas />
-          </RutaProtegida>
-        }
-      />
-      <Route
-        path="/historial"
-        element={
-          <RutaProtegida>
-            <Historial />
-          </RutaProtegida>
-        }
-      />
-      <Route
-        path="/usuarios"
-        element={
-          <RutaProtegida rolRequerido="admin">
-            <Usuarios />
-          </RutaProtegida>
-        }
-      />
+      {/* Rutas públicas — Mapa accesible sin login */}
+      <Route path="/mapa" element={<PageTransition><MapaParqueaderos /></PageTransition>} />
 
-      {/* Redirección por defecto */}
+      {/* Rutas del CLIENTE */}
+      <Route path="/reservar/:parqueaderoId" element={<RutaCliente><PageTransition><Reservar /></PageTransition></RutaCliente>} />
+      <Route path="/mis-reservas" element={<RutaCliente><PageTransition><MisReservas /></PageTransition></RutaCliente>} />
+      <Route path="/perfil" element={<RutaCliente><PageTransition><Perfil /></PageTransition></RutaCliente>} />
+      <Route path="/portal" element={<RutaCliente><PageTransition><ClientPortal /></PageTransition></RutaCliente>} />
+
+      {/* Rutas de STAFF (admin/empleado) */}
+      <Route path="/dashboard" element={<RutaProtegida rolRequerido="admin"><PageTransition><Dashboard /></PageTransition></RutaProtegida>} />
+      <Route path="/vehiculos" element={<RutaProtegida><PageTransition><Vehiculos /></PageTransition></RutaProtegida>} />
+      <Route path="/plazas" element={<RutaProtegida><PageTransition><Plazas /></PageTransition></RutaProtegida>} />
+      <Route path="/historial" element={<RutaProtegida><PageTransition><Historial /></PageTransition></RutaProtegida>} />
+      <Route path="/usuarios" element={<RutaProtegida rolRequerido="admin"><PageTransition><Usuarios /></PageTransition></RutaProtegida>} />
+
+      {/* Default */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </AnimatePresence>
   );
 }
 
-/**
- * Componente Raíz de la Aplicación
- */
 function App() {
   return (
     <BrowserRouter>
@@ -144,7 +145,6 @@ function App() {
         <VoiceAssistant />
         <FaqDrawer />
         <AppRoutes />
-        {/* Toast notifications */}
         <Toaster
           position="top-right"
           toastOptions={{
@@ -157,18 +157,8 @@ function App() {
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
               backdropFilter: 'blur(12px)',
             },
-            success: {
-              iconTheme: {
-                primary: '#22d3ee', // gpa-cyan
-                secondary: '#111116',
-              },
-            },
-            error: {
-              iconTheme: {
-                primary: '#ef4444', // red
-                secondary: '#111116',
-              },
-            },
+            success: { iconTheme: { primary: '#22d3ee', secondary: '#111116' } },
+            error: { iconTheme: { primary: '#ef4444', secondary: '#111116' } },
           }}
         />
       </AuthProvider>
