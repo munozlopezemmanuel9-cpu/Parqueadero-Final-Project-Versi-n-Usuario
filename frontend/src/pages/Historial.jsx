@@ -180,12 +180,12 @@ export default function Historial() {
       <div className="glass-card p-6 border-white/5 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gpa-blue/5 rounded-full blur-[80px] pointer-events-none" />
         
-        <div className="flex items-center justify-between mb-6 relative z-10">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sm:mb-6 relative z-10">
           <div className="flex items-center gap-2">
             <Filter className="w-5 h-5 text-gpa-blue" />
             <h2 className="text-lg font-bold text-white tracking-wide">Filtros y Reportes</h2>
           </div>
-          <div className="hidden sm:flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 mt-3 sm:mt-0">
             <button onClick={() => aplicarFiltroRapido('hoy')} className="px-3 py-1.5 text-xs font-bold text-white uppercase bg-white/5 hover:bg-gpa-blue/20 rounded-lg transition-colors border border-white/10">Hoy</button>
             <button onClick={() => aplicarFiltroRapido('semana')} className="px-3 py-1.5 text-xs font-bold text-white uppercase bg-white/5 hover:bg-gpa-blue/20 rounded-lg transition-colors border border-white/10">Semana</button>
             <button onClick={() => aplicarFiltroRapido('mes')} className="px-3 py-1.5 text-xs font-bold text-white uppercase bg-white/5 hover:bg-gpa-blue/20 rounded-lg transition-colors border border-white/10">Mes</button>

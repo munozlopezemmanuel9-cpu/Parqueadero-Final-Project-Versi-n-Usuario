@@ -208,10 +208,10 @@ export default function Dashboard() {
                 <Zap className="w-3 h-3 fill-current" />
                 Acceso Nivel {usuario?.rol === 'admin' ? 'Total' : 'Operativo'}
               </div>
-              <h2 className="text-5xl md:text-6xl font-black text-white leading-[0.9] tracking-tighter">
+              <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-white leading-[0.9] tracking-tighter">
                 HOLA, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-400 to-slate-600 uppercase">{usuario?.nombre.split(' ')[0]}</span>.
               </h2>
-              <p className="text-slate-400 text-lg md:text-xl font-medium leading-relaxed">
+              <p className="text-slate-400 text-base md:text-xl font-medium leading-relaxed">
                 {usuario?.rol === 'admin'
                   ? 'El sistema está operando al máximo rendimiento. Tienes 4 alertas pendientes de revisión en el módulo de usuarios.'
                   : 'Listo para procesar ingresos y salidas. Recuerda verificar siempre la placa antes de confirmar.'}

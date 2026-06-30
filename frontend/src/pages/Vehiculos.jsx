@@ -546,25 +546,25 @@ export default function Vehiculos() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-white/10 pb-1">
+      <div className="flex items-center gap-1 border-b border-white/10 pb-1 overflow-x-auto">
         <button
           onClick={() => setTabActiva('activos')}
-          className={`flex items-center gap-2 px-6 py-3 font-bold text-sm uppercase tracking-wider transition-all relative ${
+          className={`flex items-center gap-2 px-4 sm:px-6 py-3 font-bold text-xs sm:text-sm uppercase tracking-wider transition-all relative whitespace-nowrap ${
             tabActiva === 'activos' ? 'text-white' : 'text-slate-500 hover:text-slate-300'
           }`}
         >
-          <Car className="w-4 h-4" /> Vehículos Activos
+          <Car className="w-4 h-4" /> <span className="hidden sm:inline">Vehículos </span>Activos
           {tabActiva === 'activos' && (
             <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-gpa-blue shadow-[0_0_10px_rgba(var(--color-gpa-blue),0.8)]" />
           )}
         </button>
         <button
           onClick={() => setTabActiva('reservas')}
-          className={`flex items-center gap-2 px-6 py-3 font-bold text-sm uppercase tracking-wider transition-all relative ${
+          className={`flex items-center gap-2 px-4 sm:px-6 py-3 font-bold text-xs sm:text-sm uppercase tracking-wider transition-all relative whitespace-nowrap ${
             tabActiva === 'reservas' ? 'text-white' : 'text-slate-500 hover:text-slate-300'
           }`}
         >
-          <CalendarDays className="w-4 h-4" /> Reservas Pendientes
+          <CalendarDays className="w-4 h-4" /> <span className="hidden sm:inline">Reservas </span>Pendientes
           {tabActiva === 'reservas' && (
             <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-gpa-cyan shadow-[0_0_10px_rgba(var(--color-gpa-cyan),0.8)]" />
           )}
@@ -573,30 +573,30 @@ export default function Vehiculos() {
 
       {/* Stats rápidas (Solo para activos) */}
       {tabActiva === 'activos' && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-fade-in">
-          <div className="glass-card p-6 border-white/5 hover:border-white/20 transition-all relative overflow-hidden group">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-in">
+          <div className="glass-card p-4 sm:p-6 border-white/5 hover:border-white/20 transition-all relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-1 h-full bg-slate-400" />
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Total Activos</p>
-            <p className="text-4xl font-black text-white group-hover:scale-105 transition-transform origin-left">{vehiculos.length}</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 sm:mb-2">Total Activos</p>
+            <p className="text-3xl sm:text-4xl font-black text-white group-hover:scale-105 transition-transform origin-left">{vehiculos.length}</p>
           </div>
-          <div className="glass-card p-6 bg-orange-500/5 border-orange-500/10 hover:border-orange-500/30 transition-all relative overflow-hidden group">
+          <div className="glass-card p-4 sm:p-6 bg-orange-500/5 border-orange-500/10 hover:border-orange-500/30 transition-all relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-1 h-full bg-orange-500" />
-            <p className="text-sm font-bold text-orange-400/80 uppercase tracking-wider mb-2">Motos</p>
-            <p className="text-4xl font-black text-orange-400 group-hover:scale-105 transition-transform origin-left">
+            <p className="text-xs font-bold text-orange-400/80 uppercase tracking-wider mb-1 sm:mb-2">Motos</p>
+            <p className="text-3xl sm:text-4xl font-black text-orange-400 group-hover:scale-105 transition-transform origin-left">
               {vehiculos.filter(v => v.vehiculo_tipo === 'moto').length}
             </p>
           </div>
-          <div className="glass-card p-6 bg-gpa-blue/5 border-gpa-blue/10 hover:border-gpa-blue/30 transition-all relative overflow-hidden group">
+          <div className="glass-card p-4 sm:p-6 bg-gpa-blue/5 border-gpa-blue/10 hover:border-gpa-blue/30 transition-all relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-1 h-full bg-gpa-blue" />
-            <p className="text-sm font-bold text-gpa-blue/80 uppercase tracking-wider mb-2">Carros</p>
-            <p className="text-4xl font-black text-gpa-blue group-hover:scale-105 transition-transform origin-left">
+            <p className="text-xs font-bold text-gpa-blue/80 uppercase tracking-wider mb-1 sm:mb-2">Carros</p>
+            <p className="text-3xl sm:text-4xl font-black text-gpa-blue group-hover:scale-105 transition-transform origin-left">
               {vehiculos.filter(v => v.vehiculo_tipo === 'carro').length}
             </p>
           </div>
-          <div className="glass-card p-6 bg-purple-500/5 border-purple-500/10 hover:border-purple-500/30 transition-all relative overflow-hidden group">
+          <div className="glass-card p-4 sm:p-6 bg-purple-500/5 border-purple-500/10 hover:border-purple-500/30 transition-all relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
-            <p className="text-sm font-bold text-purple-400/80 uppercase tracking-wider mb-2">Camionetas</p>
-            <p className="text-4xl font-black text-purple-400 group-hover:scale-105 transition-transform origin-left">
+            <p className="text-xs font-bold text-purple-400/80 uppercase tracking-wider mb-1 sm:mb-2">Camionetas</p>
+            <p className="text-3xl sm:text-4xl font-black text-purple-400 group-hover:scale-105 transition-transform origin-left">
               {vehiculos.filter(v => v.vehiculo_tipo === 'camioneta').length}
             </p>
           </div>
